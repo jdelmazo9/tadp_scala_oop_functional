@@ -9,30 +9,24 @@
 class Class
   attr_accessor :bloques_after, :bloques_before
 
-  def initialize
-
-  end
-
   def ejecutar_bloques_before
-    puts self
-    puts "ejecutar bloques before"
-    self.bloques_before.each { |bloque| bloque.call }
-    # self.singleton_class.bloques_before.each { |bloque| bloque.call }
+    # puts self.bloques_before.inspect
+    @bloques_before.each { |bloque| bloque.call }
   end
 
-  private def foo
-    puts "foo"
+  def ejecutar_bloques_after
+    @bloques_after.each { |bloque| bloque.call }
   end
 
   private def before_and_after_each_call(bloque_before, bloque_after)
-    if self.singleton_class.bloques_before.nil?
-      self.singleton_class.bloques_before = []
+    if @bloques_before.nil?
+      @bloques_before = []
     end
-    if self.singleton_class.bloques_after.nil?
-      self.singleton_class.bloques_after = []
+    if @bloques_after.nil?
+      @bloques_after = []
     end
-    self.singleton_class.bloques_before.append bloque_before
-    self.singleton_class.bloques_after.append bloque_after
+    @bloques_before << bloque_before
+    @bloques_after << bloque_after
   end
 
   private def method_added(method_name)
@@ -48,23 +42,13 @@ class Class
         @ya_sobrescribi_estos << "#{method_name}_2".to_sym
         alias_method "#{method_name}_2".to_sym, method_name
         self.define_method(method_name) do |a:nil|
-          # send(:ejecutar_bloques_before)
-          # ejecutar_bloques_before
-          # puts "aaa"
-          puts self
-          self.singleton_class.ejecutar_bloques_before
+          self.class.ejecutar_bloques_before
           self.send("#{method_name}_2".to_sym)
-          # @bloques_after.each { |&bloque| bloque.call }
+          self.class.ejecutar_bloques_after
         end
       end
     end
   end
-
-  # private def define_method(method_name, block)
-  #   puts("hola")
-  #   nuevo = proc{ puts "hola"; block; puts "chau"}
-  #   super(method_name, nuevo)
-  # end
 
 end
 
@@ -72,50 +56,21 @@ end
 class MiClase
   before_and_after_each_call(
       # Bloque Before. Se ejecuta antes de cada mensaje
-      proc{ puts “Entré a un mensaje” },
+      proc{ puts "aeeeeaa" },
       # Bloque After. Se ejecuta después de cada mensaje
-      proc{ puts “Salí de un mensaje” }
+      proc{ puts "sabale sabale" }
   )
 
-  def mensaje_0
+  def sabalero_soy
     puts "yo soy sabalero"
     return 0
   end
 
-  def mensaje_1
-    puts "mensaje_1"
-    return 5
-  end
-
-  # def mensaje_falopa
-  #   self.ejecutar_bloques_before
-  # end
-
-  #
   # def mensaje_2
   #   puts "mensaje_2"
   #   return 3
   # end
-  #
-  # def mensaje_1_2
-  #   puts "aaaaaaea sabale sabale"
-  # end
 end
 
-# puts MiClase.class
-# puts MiClase.ancestors
-# puts MiClase.singleton_class.ancestors
-# MiClase.new.mensaje_1
-#
-#
-# puts MiClase.class
-# miclase = MiClase.new
-# puts miclase
-# # miclase.mensaje_0
-# miclase.mensaje_1
-# # MiClase.new.mensaje_1
-
-# puts MiClase.new
-# puts MiClase.new.singleton_class
-# # MiClase.new.mensaje_1
-# # MiClase.new.mensaje_1
+miclase = MiClase.new
+miclase.sabalero_soy
