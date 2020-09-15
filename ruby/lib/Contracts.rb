@@ -4,6 +4,7 @@
 #     * llamo a todos los before
 #     * ejecuto lo que vos querias
 #     * llamo a todos los after
+#
 
 class ContractMethod
   attr_accessor :method_name
@@ -12,6 +13,7 @@ class ContractMethod
     @method = method
     @method_name = method_name
   end
+
   def exec_on(instance, args)
     @method.bind(instance).call(*args)
   end
@@ -31,6 +33,16 @@ class Class
     @bloques_after << bloque_after
   end
 
+  private def invariant(&bloque)
+    if @bloques_after.nil?
+      @bloques_after = []
+    end
+    @bloques_after << proc do
+      unless instance_eval(&bloque)
+        raise "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?"
+      end
+    end
+  end
 
   private def method_added(method_name, *args)
     if @overwritten_contract_methods.nil?
@@ -45,69 +57,101 @@ class Class
         contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
         @overwritten_contract_methods << contractMethod
         self.define_method(method_name) do |*args|
-          #puts "SOY EL DEEP Y ESTOY EN: " + @deep.inspect
+          # puts "SOY EL DEEP Y ESTOY EN: " + @deep.inspect
           if @deep.nil?
             @deep = 0
           end
           deep_local = @deep
           @deep += 1
-          if deep_local == 0
+          if deep_local == 0 and not self.class.bloques_before.nil?
             self.class.bloques_before.each do |proc|
               instance_eval(&proc)
             end
           end
-          contractMethod.exec_on(self, args)
+          ret = contractMethod.exec_on(self, args)
 
-          if deep_local == 0
+          if deep_local == 0 and not self.class.bloques_after.nil?
             self.class.bloques_after.each do |proc|
               instance_eval(&proc)
             end
           end
           @deep -= 1
+          # puts "ESTOY SALIENDO CON DEEP: " + @deep.inspect
+          ret
         end
       end
     end
   end
 end
 
+#
+# class MiClase
+#
+#   attr_accessor :la_variable_sabalera
+#
+#   def initialize
+#     @la_variable_sabalera = 'aaaeeeaaa (la variable sabalera)'
+#     @la_variable_no_tan_sabalera = 'aea'
+#   end
+#
+#   before_and_after_each_call(
+#       # Bloque Before. Se ejecuta antes de cada mensaje
+#       proc { puts la_variable_sabalera },
+#       # Bloque After. Se ejecuta después de cada mensaje
+#       proc{ puts "sabale sabale #{la_variable_sabalera}"}
+#   )
+#
+#   before_and_after_each_call(
+#       # Bloque Before. Se ejecuta antes de cada mensaje
+#       proc { puts @la_variable_no_tan_sabalera },
+#       # Bloque After. Se ejecuta después de cada mensaje
+#       proc{ puts "sabale sabale #{@la_variable_no_tan_sabalera}"}
+#   )
+#
+#
+#   def sabalero_soy_1_arg(arg1)
+#     puts "soy el metodo que tiene un argumento #{arg1}"
+#     return 0
+#   end
+#
+#   def sabalero_soy_2_arg(arg1, arg2)
+#     puts "tengo 2 argumentos #{arg1} #{arg2}"
+#     return 0
+#   end
+#
+#   def sabalero_soy_0_arg
+#     puts "yo no tengo argumentos pero soy sabalero"
+#     return 0
+#   end
+# end
+#
+# # MiClase.
+#
+# miclase = MiClase.new
+# miclase.sabalero_soy_0_arg
+# miclase.sabalero_soy_1_arg(1)
+# miclase.sabalero_soy_2_arg(1, 2)
 
-class MiClase
 
-  attr_accessor :la_variable_sabalera
+class Sabalero
 
-  def initialize
-    @la_variable_sabalera = 'aaaeeeaaa (la variable sabalera)'
-    @la_variable_no_tan_sabalera = 'aea'
+  attr_accessor :vino_en_sangre, :amor_por_el_pulga
+
+  invariant { amor_por_el_pulga >= 100 }
+  invariant { vino_en_sangre > 10 && vino_en_sangre < 1500 }
+
+  def initialize(amor, vino)
+    @vino_en_sangre = vino
+    @amor_por_el_pulga = amor
   end
 
-  before_and_after_each_call(
-      # Bloque Before. Se ejecuta antes de cada mensaje
-      proc { puts sabalero_soy_0_arg },
-      # Bloque After. Se ejecuta después de cada mensaje
-      proc{ puts "sabale sabale #{la_variable_sabalera}" }
-  )
-
-
-  def sabalero_soy_1_arg(arg1)
-    puts "soy el metodo que tiene un argumento #{arg1}"
-    return 0
+  def convidar_de_la_jarra(otro)
+    otro.vino_en_sangre += amor_por_el_pulga
   end
 
-  def sabalero_soy_2_arg(arg1, arg2)
-    puts "tengo 2 argumentos #{arg1} #{arg2}"
-    return 0
-  end
-
-  def sabalero_soy_0_arg
-    puts "yo no tengo argumentos pero soy sabalero"
-    return 0
-  end
 end
 
-# MiClase.
+saba = Sabalero.new(150, 20)
+lero = Sabalero.new(1500, 1400)
 
-miclase = MiClase.new
-miclase.sabalero_soy_0_arg
-miclase.sabalero_soy_1_arg(1)
-miclase.sabalero_soy_2_arg(1, 2)
-
+saba.convidar_de_la_jarra(lero)
