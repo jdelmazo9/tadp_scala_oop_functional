@@ -20,14 +20,6 @@ end
 class Class
   attr_accessor :bloques_after, :bloques_before
 
-  def ejecutar_bloques_before(instance_object)
-    @bloques_before.each { |bloque| instance_object.instance_eval {bloque.call} }
-  end
-
-  def ejecutar_bloques_after(instance_object)
-    @bloques_after.each { |bloque| instance_object.instance_eval {bloque.call} }
-  end
-
   private def before_and_after_each_call(bloque_before, bloque_after)
     if @bloques_before.nil?
       @bloques_before = []
@@ -39,6 +31,7 @@ class Class
     @bloques_after << bloque_after
   end
 
+
   private def method_added(method_name, *args)
     if @overwritten_contract_methods.nil?
       @overwritten_contract_methods = []
@@ -46,18 +39,31 @@ class Class
     super
     puts "agregando metodo #{method_name}"
     self.class_eval do
-      if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added && method_name != :initialize && method_name != :la_variable_sabalera && method_name != :la_variable_sabalera=
+
+      if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added && method_name != :initialize
         puts "modificando metodo #{method_name}"
         contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
         @overwritten_contract_methods << contractMethod
         self.define_method(method_name) do |*args|
-          #self.class.ejecutar_bloques_before(self)
-          #puts self.la_variable_sabalera
-          self.class.bloques_before.each do |&proc|
-            self.instance_eval {proc}
+          #puts "SOY EL DEEP Y ESTOY EN: " + @deep.inspect
+          if @deep.nil?
+            @deep = 0
+          end
+          deep_local = @deep
+          @deep += 1
+          if deep_local == 0
+            self.class.bloques_before.each do |proc|
+              instance_eval(&proc)
+            end
           end
           contractMethod.exec_on(self, args)
-          #self.class.ejecutar_bloques_after(self)
+
+          if deep_local == 0
+            self.class.bloques_after.each do |proc|
+              instance_eval(&proc)
+            end
+          end
+          @deep -= 1
         end
       end
     end
@@ -71,36 +77,37 @@ class MiClase
 
   def initialize
     @la_variable_sabalera = 'aaaeeeaaa (la variable sabalera)'
+    @la_variable_no_tan_sabalera = 'aea'
   end
-
 
   before_and_after_each_call(
       # Bloque Before. Se ejecuta antes de cada mensaje
-      proc { puts la_variable_sabalera },
+      proc { puts sabalero_soy_0_arg },
       # Bloque After. Se ejecuta después de cada mensaje
-      proc{ puts "sabale sabale" }
+      proc{ puts "sabale sabale #{la_variable_sabalera}" }
   )
 
 
-
   def sabalero_soy_1_arg(arg1)
-    puts "yo soy sabalero #{arg1}"
+    puts "soy el metodo que tiene un argumento #{arg1}"
     return 0
   end
 
   def sabalero_soy_2_arg(arg1, arg2)
-    puts "yo soy sabalero #{arg1} #{arg2}"
+    puts "tengo 2 argumentos #{arg1} #{arg2}"
     return 0
   end
 
   def sabalero_soy_0_arg
-    puts "yo soy sabalero"
+    puts "yo no tengo argumentos pero soy sabalero"
     return 0
   end
 end
 
+# MiClase.
+
 miclase = MiClase.new
 miclase.sabalero_soy_0_arg
-# miclase.sabalero_soy_1_arg(1)
-# miclase.sabalero_soy_2_arg(1, 2)
+miclase.sabalero_soy_1_arg(1)
+miclase.sabalero_soy_2_arg(1, 2)
 
