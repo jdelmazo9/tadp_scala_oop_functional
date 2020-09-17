@@ -48,37 +48,34 @@ class Class
     if @overwritten_contract_methods.nil?
       @overwritten_contract_methods = []
     end
-    super
     puts "agregando metodo #{method_name}"
-    self.class_eval do
 
-      if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added && method_name != :initialize
-        puts "modificando metodo #{method_name}"
-        contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
-        @overwritten_contract_methods << contractMethod
-        self.define_method(method_name) do |*args|
-          # puts "SOY EL DEEP Y ESTOY EN: " + @deep.inspect
-          if @deep.nil?
-            @deep = 0
-          end
-          deep_local = @deep
-          @deep += 1
-          if deep_local == 0 and not self.class.bloques_before.nil?
-            self.class.bloques_before.each do |proc|
-              instance_eval(&proc)
-            end
-          end
-          ret = contractMethod.exec_on(self, args)
-
-          if deep_local == 0 and not self.class.bloques_after.nil?
-            self.class.bloques_after.each do |proc|
-              instance_eval(&proc)
-            end
-          end
-          @deep -= 1
-          # puts "ESTOY SALIENDO CON DEEP: " + @deep.inspect
-          ret
+    if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added && method_name != :initialize
+      puts "modificando metodo #{method_name}"
+      contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
+      @overwritten_contract_methods << contractMethod
+      self.define_method(method_name) do |*args|
+        # puts "SOY EL DEEP Y ESTOY EN: " + @deep.inspect
+        if @deep.nil?
+          @deep = 0
         end
+        deep_local = @deep
+        @deep += 1
+        if deep_local == 0 and not self.class.bloques_before.nil?
+          self.class.bloques_before.each do |proc|
+            instance_eval(&proc)
+          end
+        end
+        ret = contractMethod.exec_on(self, args)
+
+        if deep_local == 0 and not self.class.bloques_after.nil?
+          self.class.bloques_after.each do |proc|
+            instance_eval(&proc)
+          end
+        end
+        @deep -= 1
+        # puts "ESTOY SALIENDO CON DEEP: " + @deep.inspect
+        ret
       end
     end
   end
@@ -152,6 +149,6 @@ class Sabalero
 end
 
 saba = Sabalero.new(150, 20)
-lero = Sabalero.new(1500, 1400)
+lero = Sabalero.new(1500, 1500)
 
 saba.convidar_de_la_jarra(lero)
