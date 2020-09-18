@@ -19,6 +19,9 @@ class ContractMethod
   end
 end
 
+class ChinchulinException < StandardError
+end
+
 class Class
   attr_accessor :bloques_after, :bloques_before
 
@@ -38,8 +41,36 @@ class Class
       @bloques_after = []
     end
     @bloques_after << proc do
-      unless instance_eval(&bloque)
+      result = instance_eval(&bloque)
+      unless result.is_a? TrueClass
+        raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
+      end
+      unless result
         raise "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?"
+      end
+    end
+  end
+
+  private def pre(&bloque)
+    @pre = proc do
+      result = instance_eval(&bloque)
+      unless result.is_a? TrueClass
+        raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
+      end
+      unless result
+        raise "No cumple la sabalera precondicion"
+      end
+    end
+  end
+
+  private def post(&bloque)
+    @post = proc do
+      result = instance_eval(&bloque)
+      unless result.is_a? TrueClass
+        raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
+      end
+      unless result
+        raise "No cumple la sabalera postcondicion sabalera"
       end
     end
   end
@@ -50,10 +81,14 @@ class Class
     end
     puts "agregando metodo #{method_name}"
 
-    if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added && method_name != :initialize
+    if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added
       puts "modificando metodo #{method_name}"
       contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
       @overwritten_contract_methods << contractMethod
+      pre = @pre
+      @pre = nil
+      post = @post
+      @post = nil
       self.define_method(method_name) do |*args|
         # puts "SOY EL DEEP Y ESTOY EN: " + @deep.inspect
         if @deep.nil?
@@ -61,16 +96,26 @@ class Class
         end
         deep_local = @deep
         @deep += 1
-        if deep_local == 0 and not self.class.bloques_before.nil?
-          self.class.bloques_before.each do |proc|
-            instance_eval(&proc)
+        if deep_local == 0
+          unless pre.nil?
+            instance_eval(&pre)
+          end
+          unless self.class.bloques_before.nil?
+            self.class.bloques_before.each do |proc|
+              instance_eval(&proc)
+            end
           end
         end
         ret = contractMethod.exec_on(self, args)
 
-        if deep_local == 0 and not self.class.bloques_after.nil?
-          self.class.bloques_after.each do |proc|
-            instance_eval(&proc)
+        if deep_local == 0
+          unless self.class.bloques_after.nil?
+            self.class.bloques_after.each do |proc|
+              instance_eval(&proc)
+            end
+          end
+          unless post.nil?
+            instance_eval(&post)
           end
         end
         @deep -= 1
@@ -132,23 +177,36 @@ end
 
 class Sabalero
 
-  attr_accessor :vino_en_sangre, :amor_por_el_pulga
+  attr_accessor :nombre, :vino_en_sangre, :amor_por_el_pulga, :cantidad_de_sabalamigos
+
+    before_and_after_each_call(
+        # Bloque Before. Se ejecuta antes de cada mensaje
+        proc { puts "before #{@nombre}" },
+        # Bloque After. Se ejecuta después de cada mensaje
+        proc { puts "after #{@nombre}" }
+    )
 
   invariant { amor_por_el_pulga >= 100 }
   invariant { vino_en_sangre > 10 && vino_en_sangre < 1500 }
 
-  def initialize(amor, vino)
+  def initialize(nombre, amor, vino)
+    @nombre = nombre
     @vino_en_sangre = vino
     @amor_por_el_pulga = amor
+    @cantidad_de_sabalamigos = 0
   end
 
+  pre { @amor_por_el_pulga > 0 }
+  post { amor_por_el_pulga > 0 }
   def convidar_de_la_jarra(otro)
     otro.vino_en_sangre += amor_por_el_pulga
+    @cantidad_de_sabalamigos += 1
   end
 
 end
 
-saba = Sabalero.new(150, 20)
-lero = Sabalero.new(1500, 1500)
+
+saba = Sabalero.new("Saba",150, 20)
+lero = Sabalero.new("Lero", 1500, 1300)
 
 saba.convidar_de_la_jarra(lero)
