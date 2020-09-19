@@ -92,14 +92,14 @@ class Class
         @deep += 1
         if deep_local == 0
           instance_eval(&pre) unless pre.nil?
-          self.class.bloques_before.each do |proc|
+          self.class.bloques_before&.each do |proc|
             instance_eval(&proc)
           end
         end
         ret = contractMethod.exec_on(self, args)
 
         if deep_local == 0
-          self.class.bloques_after.each do |proc|
+          self.class.bloques_after&.each do |proc|
             instance_eval(&proc)
           end
           instance_eval(&post) unless post.nil?
