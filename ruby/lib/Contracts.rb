@@ -26,20 +26,14 @@ class Class
   attr_accessor :bloques_after, :bloques_before
 
   private def before_and_after_each_call(bloque_before, bloque_after)
-    if @bloques_before.nil?
-      @bloques_before = []
-    end
-    if @bloques_after.nil?
-      @bloques_after = []
-    end
+    @bloques_before ||= []
+    @bloques_after ||= []
     @bloques_before << bloque_before
     @bloques_after << bloque_after
   end
 
   private def invariant(&bloque)
-    if @bloques_after.nil?
-      @bloques_after = []
-    end
+   @bloques_after ||= []
     @bloques_after << proc do
       result = instance_eval(&bloque)
       unless result.is_a? TrueClass
@@ -54,7 +48,7 @@ class Class
   private def pre(&bloque)
     @pre = proc do
       result = instance_eval(&bloque)
-      unless result.is_a? TrueClass
+      unless result.is_a? TrueClass or result.is_a? FalseClass
         raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
       end
       unless result
@@ -97,26 +91,18 @@ class Class
         deep_local = @deep
         @deep += 1
         if deep_local == 0
-          unless pre.nil?
-            instance_eval(&pre)
-          end
-          unless self.class.bloques_before.nil?
-            self.class.bloques_before.each do |proc|
-              instance_eval(&proc)
-            end
+          instance_eval(&pre) unless pre.nil?
+          self.class.bloques_before.each do |proc|
+            instance_eval(&proc)
           end
         end
         ret = contractMethod.exec_on(self, args)
 
         if deep_local == 0
-          unless self.class.bloques_after.nil?
-            self.class.bloques_after.each do |proc|
-              instance_eval(&proc)
-            end
+          self.class.bloques_after.each do |proc|
+            instance_eval(&proc)
           end
-          unless post.nil?
-            instance_eval(&post)
-          end
+          instance_eval(&post) unless post.nil?
         end
         @deep -= 1
         # puts "ESTOY SALIENDO CON DEEP: " + @deep.inspect
@@ -207,6 +193,6 @@ end
 
 
 saba = Sabalero.new("Saba",150, 20)
-lero = Sabalero.new("Lero", 1500, 1300)
+lero = Sabalero.new("Lero", 1300, 1500)
 
 saba.convidar_de_la_jarra(lero)
