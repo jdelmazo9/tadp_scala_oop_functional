@@ -22,51 +22,39 @@ end
 class ChinchulinException < StandardError
 end
 
-class Class
-  attr_accessor :bloques_after, :bloques_before
+class Module
+  attr_accessor :after_blocks, :before_blocks
 
   private def before_and_after_each_call(bloque_before, bloque_after)
-    @bloques_before ||= []
-    @bloques_after ||= []
-    @bloques_before << bloque_before
-    @bloques_after << bloque_after
+    @before_blocks ||= []
+    @after_blocks ||= []
+    @before_blocks << bloque_before
+    @after_blocks << bloque_after
   end
 
-  private def invariant(&bloque)
-   @bloques_after ||= []
-    @bloques_after << proc do
-      result = instance_eval(&bloque)
-      unless result.is_a? TrueClass
-        raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
-      end
-      unless result
-        raise "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?"
-      end
-    end
-  end
-
-  private def pre(&bloque)
-    @pre = proc do
+  def proc_with_block_condition(bloque, error_message = "Condition is not verified")
+    proc do
       result = instance_eval(&bloque)
       unless result.is_a? TrueClass or result.is_a? FalseClass
         raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
       end
       unless result
-        raise "No cumple la sabalera precondicion"
+        raise error_message
       end
     end
   end
 
+  private def invariant(&bloque)
+   @after_blocks ||= []
+    @after_blocks << proc_with_block_condition(bloque, "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?")
+  end
+
+  private def pre(&bloque)
+    @pre = proc_with_block_condition(bloque, "No cumple la sabalera precondicion")
+  end
+
   private def post(&bloque)
-    @post = proc do
-      result = instance_eval(&bloque)
-      unless result.is_a? TrueClass
-        raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
-      end
-      unless result
-        raise "No cumple la sabalera postcondicion sabalera"
-      end
-    end
+    @post = proc_with_block_condition(bloque, "No cumple la sabalera postcondicion")
   end
 
   private def method_added(method_name, *args)
@@ -84,115 +72,110 @@ class Class
       post = @post
       @post = nil
       self.define_method(method_name) do |*args|
-        # puts "SOY EL DEEP Y ESTOY EN: " + @deep.inspect
-        if @deep.nil?
-          @deep = 0
-        end
+        @deep = 0 if @deep.nil?
         deep_local = @deep
         @deep += 1
         if deep_local == 0
           instance_eval(&pre) unless pre.nil?
-          self.class.bloques_before&.each do |proc|
+          self.class.before_blocks&.each do |proc|
             instance_eval(&proc)
           end
         end
         ret = contractMethod.exec_on(self, args)
-
         if deep_local == 0
-          self.class.bloques_after&.each do |proc|
+          self.class.after_blocks&.each do |proc|
             instance_eval(&proc)
           end
           instance_eval(&post) unless post.nil?
         end
         @deep -= 1
-        # puts "ESTOY SALIENDO CON DEEP: " + @deep.inspect
         ret
       end
     end
   end
 end
 
-#
-# class MiClase
-#
-#   attr_accessor :la_variable_sabalera
-#
-#   def initialize
-#     @la_variable_sabalera = 'aaaeeeaaa (la variable sabalera)'
-#     @la_variable_no_tan_sabalera = 'aea'
-#   end
-#
-#   before_and_after_each_call(
-#       # Bloque Before. Se ejecuta antes de cada mensaje
-#       proc { puts la_variable_sabalera },
-#       # Bloque After. Se ejecuta después de cada mensaje
-#       proc{ puts "sabale sabale #{la_variable_sabalera}"}
-#   )
-#
-#   before_and_after_each_call(
-#       # Bloque Before. Se ejecuta antes de cada mensaje
-#       proc { puts @la_variable_no_tan_sabalera },
-#       # Bloque After. Se ejecuta después de cada mensaje
-#       proc{ puts "sabale sabale #{@la_variable_no_tan_sabalera}"}
-#   )
-#
-#
-#   def sabalero_soy_1_arg(arg1)
-#     puts "soy el metodo que tiene un argumento #{arg1}"
-#     return 0
-#   end
-#
-#   def sabalero_soy_2_arg(arg1, arg2)
-#     puts "tengo 2 argumentos #{arg1} #{arg2}"
-#     return 0
-#   end
-#
-#   def sabalero_soy_0_arg
-#     puts "yo no tengo argumentos pero soy sabalero"
-#     return 0
-#   end
-# end
-#
-# # MiClase.
-#
-# miclase = MiClase.new
-# miclase.sabalero_soy_0_arg
-# miclase.sabalero_soy_1_arg(1)
-# miclase.sabalero_soy_2_arg(1, 2)
 
+class MiClase
 
-class Sabalero
+  attr_accessor :la_variable_sabalera
 
-  attr_accessor :nombre, :vino_en_sangre, :amor_por_el_pulga, :cantidad_de_sabalamigos
-
-    before_and_after_each_call(
-        # Bloque Before. Se ejecuta antes de cada mensaje
-        proc { puts "before #{@nombre}" },
-        # Bloque After. Se ejecuta después de cada mensaje
-        proc { puts "after #{@nombre}" }
-    )
-
-  invariant { amor_por_el_pulga >= 100 }
-  invariant { vino_en_sangre > 10 && vino_en_sangre < 1500 }
-
-  def initialize(nombre, amor, vino)
-    @nombre = nombre
-    @vino_en_sangre = vino
-    @amor_por_el_pulga = amor
-    @cantidad_de_sabalamigos = 0
+  def initialize
+    @la_variable_sabalera = 'aaaeeeaaa (la variable sabalera)'
+    @la_variable_no_tan_sabalera = 'aea'
   end
 
-  pre { @amor_por_el_pulga > 0 }
-  post { amor_por_el_pulga > 0 }
-  def convidar_de_la_jarra(otro)
-    otro.vino_en_sangre += amor_por_el_pulga
-    @cantidad_de_sabalamigos += 1
+  before_and_after_each_call(
+      # Bloque Before. Se ejecuta antes de cada mensaje
+      proc { puts la_variable_sabalera },
+      # Bloque After. Se ejecuta después de cada mensaje
+      proc{ puts "sabale sabale #{la_variable_sabalera}"}
+  )
+
+  before_and_after_each_call(
+      # Bloque Before. Se ejecuta antes de cada mensaje
+      proc { puts @la_variable_no_tan_sabalera },
+      # Bloque After. Se ejecuta después de cada mensaje
+      proc{ puts "sabale sabale #{@la_variable_no_tan_sabalera}"}
+  )
+
+
+  def sabalero_soy_1_arg(arg1)
+    puts "soy el metodo que tiene un argumento #{arg1}"
+    return 0
   end
 
+  def sabalero_soy_2_arg(arg1, arg2)
+    puts "tengo 2 argumentos #{arg1} #{arg2}"
+    return 0
+  end
+
+  def sabalero_soy_0_arg
+    puts "yo no tengo argumentos pero soy sabalero"
+    return 0
+  end
 end
 
+MiClase.
 
-saba = Sabalero.new("Saba",150, 20)
-lero = Sabalero.new("Lero", 1300, 1500)
+miclase = MiClase.new
+miclase.sabalero_soy_0_arg
+miclase.sabalero_soy_1_arg(1)
+miclase.sabalero_soy_2_arg(1, 2)
 
-saba.convidar_de_la_jarra(lero)
+
+# class Sabalero
+#
+#   attr_accessor :nombre, :vino_en_sangre, :amor_por_el_pulga, :cantidad_de_sabalamigos
+#
+#     before_and_after_each_call(
+#         # Bloque Before. Se ejecuta antes de cada mensaje
+#         proc { puts "before #{@nombre}" },
+#         # Bloque After. Se ejecuta después de cada mensaje
+#         proc { puts "after #{@nombre}" }
+#     )
+#
+#   invariant { amor_por_el_pulga >= 100 }
+#   invariant { vino_en_sangre > 10 && vino_en_sangre < 1500 }
+#
+#   def initialize(nombre, amor, vino)
+#     @nombre = nombre
+#     @vino_en_sangre = vino
+#     @amor_por_el_pulga = amor
+#     @cantidad_de_sabalamigos = 0
+#   end
+#
+#   pre { @amor_por_el_pulga > 0 }
+#   post { amor_por_el_pulga > 0 }
+#   def convidar_de_la_jarra(otro)
+#     otro.vino_en_sangre += amor_por_el_pulga
+#     @cantidad_de_sabalamigos += 1
+#   end
+#
+# end
+#
+#
+# saba = Sabalero.new("Saba",150, 20)
+# lero = Sabalero.new("Lero", 1300, 1300)
+#
+# saba.convidar_de_la_jarra(lero)
