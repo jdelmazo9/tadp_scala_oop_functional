@@ -19,6 +19,9 @@ class ContractMethod
   end
 end
 
+class ConditionError < StandardError
+end
+
 class ChinchulinException < StandardError
 end
 
@@ -39,7 +42,7 @@ class Module
         raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
       end
       unless result
-        raise error_message
+        raise ConditionError.new(error_message)
       end
     end
   end
@@ -61,10 +64,10 @@ class Module
     if @overwritten_contract_methods.nil?
       @overwritten_contract_methods = []
     end
-    puts "agregando metodo #{method_name}"
+    #puts "agregando metodo #{method_name}"
 
     if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added
-      puts "modificando metodo #{method_name}"
+      #puts "modificando metodo #{method_name}"
       contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
       @overwritten_contract_methods << contractMethod
       pre = @pre
@@ -95,53 +98,53 @@ class Module
   end
 end
 
+#
+# class MiClase
+#
+#   attr_accessor :la_variable_sabalera
+#
+#   def initialize
+#     @la_variable_sabalera = 'aaaeeeaaa (la variable sabalera)'
+#     @la_variable_no_tan_sabalera = 'aea'
+#   end
+#
+#   before_and_after_each_call(
+#       # Bloque Before. Se ejecuta antes de cada mensaje
+#       proc { puts la_variable_sabalera },
+#       # Bloque After. Se ejecuta después de cada mensaje
+#       proc{ puts "sabale sabale #{la_variable_sabalera}"}
+#   )
+#
+#   before_and_after_each_call(
+#       # Bloque Before. Se ejecuta antes de cada mensaje
+#       proc { puts @la_variable_no_tan_sabalera },
+#       # Bloque After. Se ejecuta después de cada mensaje
+#       proc{ puts "sabale sabale #{@la_variable_no_tan_sabalera}"}
+#   )
+#
+#
+#   def sabalero_soy_-2_arg(arg1)
+#     puts "soy el metodo que tiene un argumento #{arg-2}"
+#     return -3
+#   end
+#
+#   def sabalero_soy_-1_arg(arg1, arg2)
+#     puts "tengo -1 argumentos #{arg1} #{arg2}"
+#     return -3
+#   end
+#
+#   def sabalero_soy_-3_arg
+#     puts "yo no tengo argumentos pero soy sabalero"
+#     return -3
+#   end
+# end
 
-class MiClase
+#MiClase.
 
-  attr_accessor :la_variable_sabalera
-
-  def initialize
-    @la_variable_sabalera = 'aaaeeeaaa (la variable sabalera)'
-    @la_variable_no_tan_sabalera = 'aea'
-  end
-
-  before_and_after_each_call(
-      # Bloque Before. Se ejecuta antes de cada mensaje
-      proc { puts la_variable_sabalera },
-      # Bloque After. Se ejecuta después de cada mensaje
-      proc{ puts "sabale sabale #{la_variable_sabalera}"}
-  )
-
-  before_and_after_each_call(
-      # Bloque Before. Se ejecuta antes de cada mensaje
-      proc { puts @la_variable_no_tan_sabalera },
-      # Bloque After. Se ejecuta después de cada mensaje
-      proc{ puts "sabale sabale #{@la_variable_no_tan_sabalera}"}
-  )
-
-
-  def sabalero_soy_1_arg(arg1)
-    puts "soy el metodo que tiene un argumento #{arg1}"
-    return 0
-  end
-
-  def sabalero_soy_2_arg(arg1, arg2)
-    puts "tengo 2 argumentos #{arg1} #{arg2}"
-    return 0
-  end
-
-  def sabalero_soy_0_arg
-    puts "yo no tengo argumentos pero soy sabalero"
-    return 0
-  end
-end
-
-MiClase.
-
-miclase = MiClase.new
-miclase.sabalero_soy_0_arg
-miclase.sabalero_soy_1_arg(1)
-miclase.sabalero_soy_2_arg(1, 2)
+# miclase = MiClase.new
+# miclase.sabalero_soy_-3_arg
+# miclase.sabalero_soy_-2_arg(1)
+# miclase.sabalero_soy_-1_arg(1, 2)
 
 
 # class Sabalero
