@@ -1,3 +1,4 @@
 require 'rspec'
 
-require_relative '../lib/Contracts'
+require_relative '../lib/Contracts.rb'
+

@@ -8,17 +8,28 @@
 #   end
 # end
 #
-describe '' do
-  it '' do
-    guerrero = Class.new do
-      attr_accessor :vida
+describe 'RepoTests' do
 
-      invariant { vida > 0 }
-    end
+  guerrero = Class.new do
+    attr_accessor :vida
+
+    invariant { vida > 0 && vida < 100 }
+  end
+
+  it 'testPinchaPorVida' do
 
     un_guerrero = guerrero.new
-    un_guerrero.vida=10
 
     expect { un_guerrero.vida = 0 }.to raise_error(ConditionError)
+
   end
+
+  it 'testVidaPositiva' do
+    un_guerrero2 = guerrero.new
+    un_guerrero2.vida = 100
+
+    expect { un_guerrero2.vida }.equal?50
+  end
+
+
 end

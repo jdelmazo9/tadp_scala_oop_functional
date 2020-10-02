@@ -149,9 +149,9 @@ class Sabalero
 
     before_and_after_each_call(
         # Bloque Before. Se ejecuta antes de cada mensaje
-        proc { puts "before #{@nombre}" },
+        proc {  },
         # Bloque After. Se ejecuta después de cada mensaje
-        proc { puts "after #{@nombre}" }
+        proc {  }
     )
 
   invariant { amor_por_el_pulga >= 100 }
@@ -180,8 +180,10 @@ end
 
 
 saba = Sabalero.new("Saba",150, 20)
-lero = Sabalero.new("Lero", 1300, 1300)
+# lero = Sabalero.new("Lero", 1300, 1300)
 
-saba.convidar_de_la_jarra(lero)
+saba.vino_en_sangre = 1000
+# saba.convidar_de_la_jarra(lero)
 
-puts lero.vino_en_sangre
+# puts(saba.vino_en_sangre)
+# puts lero.vino_en_sangre
