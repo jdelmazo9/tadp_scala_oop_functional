@@ -5,6 +5,11 @@
 #     * ejecuto lo que vos querias
 #     * llamo a todos los after
 #
+class ChinchulinException < StandardError
+end
+
+class ConditionError < StandardError
+end
 
 class ContractMethod
   attr_accessor :method_name
@@ -16,14 +21,7 @@ class ContractMethod
 
   def exec_on(instance, args, block)
     @method.bind(instance).call(*args,&block)
-    # @method.bind(instance).call(*args)
   end
-end
-
-class ChinchulinException < StandardError
-end
-
-class ConditionError < StandardError
 end
 
 class Module
@@ -39,12 +37,8 @@ class Module
   def proc_with_block_condition(bloque, error_message = "Condition is not verified")
     proc do
       result = instance_eval(&bloque)
-      unless result.is_a? TrueClass or result.is_a? FalseClass
-        raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
-      end
-      unless result
-        raise ConditionError.new error_message
-      end
+      raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin" unless result.is_a? TrueClass or result.is_a? FalseClass
+      raise ConditionError.new error_message unless result
     end
   end
 
@@ -61,38 +55,40 @@ class Module
     @post = proc_with_block_condition(bloque, "No cumple la sabalera postcondicion")
   end
 
-  private def method_added(method_name, *args)
-    @overwritten_contract_methods = [] if @overwritten_contract_methods.nil?
-    if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added
-      contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
-      @overwritten_contract_methods << contractMethod
-      self.send(:redefine_method, contractMethod,  @pre, @post)
-      @pre = nil
-      @post = nil
-    end
-  end
-
   private def redefine_method(contractMethod, pre, post)
     self.define_method(contractMethod.method_name) do |*args, &block|
-      @external_level = true if @external_level.nil?
-      local_external_level = @external_level
-      @external_level = false
-      if local_external_level
+      @external_level_redefine_method = true if @external_level_redefine_method.nil?
+      local_external_level_redefine_method = @external_level_redefine_method
+      @external_level_redefine_method = false
+      if local_external_level_redefine_method
         instance_eval(&pre) unless pre.nil?
         self.class.before_blocks&.each do |proc|
           instance_eval(&proc)
         end
       end
       ret = contractMethod.exec_on(self, args, block)
-      if local_external_level
+      if local_external_level_redefine_method
         self.class.after_blocks&.each do |proc|
           instance_eval(&proc)
         end
         instance_eval(&post) unless post.nil?
       end
-      @external_level = local_external_level
+      @external_level_redefine_method = local_external_level_redefine_method
       ret
     end
+  end
+
+  private def method_added(method_name, *args)
+    @external_level_method_added = true if @external_level_method_added.nil?
+    local_external_level_method_added = @external_level_method_added
+    @external_level_method_added = false
+    if local_external_level_method_added
+      contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
+      self.send(:redefine_method, contractMethod,  @pre, @post)
+      @pre = nil
+      @post = nil
+    end
+    @external_level_method_added = local_external_level_method_added
   end
 end
 
@@ -164,12 +160,12 @@ class Sabalero
     @cantidad_de_sabalamigos = 0
   end
 
-  post {1 == 1}
+  pre {@vino_en_sangre < 1400}
   def otraCosa
     puts "yo hago otra cosa"
   end
 
-  post { @vino_en_sangre < 1400 }
+  #post { @vino_en_sangre < 1400 }
   pre { amor_por_el_pulga > 0 }
   def convidar_de_la_jarra(otro)
     otro.vino_en_sangre += amor_por_el_pulga
@@ -185,5 +181,26 @@ saba = Sabalero.new("Saba",150, 20)
 saba.vino_en_sangre = 1000
 # saba.convidar_de_la_jarra(lero)
 
-# puts(saba.vino_en_sangre)
-# puts lero.vino_en_sangre
+puts lero.nombre
+puts lero.vino_en_sangre
+saba.otraCosa
+
+class Sabalero
+
+  pre { vino_en_sangre < 1500 }
+  def otraCosa
+    puts "me estoy redefiniendo sabale"
+  end
+  def convidar_de_la_jarra(otro)
+    otro.vino_en_sangre += 1
+    @cantidad_de_sabalamigos += 1
+  end
+end
+
+#saba.vino_en_sangre= 1400
+
+saba.otraCosa
+
+print saba.vino_en_sangre
+
+saba.convidar_de_la_jarra(lero)
