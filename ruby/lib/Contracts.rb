@@ -31,6 +31,22 @@ class ContractMethod
   end
 end
 
+class Abc
+
+  def def_geter(method, valor)
+    self.class.define_method(method) {valor}
+  end
+
+  def exec_proc(args, &bloque)
+    if args.nil?
+      instance_exec &bloque
+    else
+      instance_exec(args) &bloque
+    end
+  end
+
+end
+
 class Module
   attr_accessor :after_blocks, :before_blocks
 
@@ -43,14 +59,24 @@ class Module
 
   def proc_with_block_condition(&bloque)
     error_message = "Condition is not verified"
-    proc do |*args, args_list|
-      # i = 0
-      # args_list.each do |arg|
-      #   puts "#{arg} = #{args[0][i]}"
-      #   eval("#{arg} = #{args[0][i]}")
-      #   i+=1
-      # end
-      bloque.binding.instance_exec(*args, &bloque)
+    proc do |ret, *args, args_list|
+      aux = Abc.new
+      aux.def_geter(:result,ret)
+      i = 0
+      args_list.each do |arg|
+        puts "#{arg} = #{args[0][i]}"
+        aux.def_geter(arg,args[0][i])
+        # eval("#{arg} = #{args[0][i]}")
+        i+=1
+      end
+      #bloque.binding.instance_exec(*args, &bloque)
+
+      # aux.def_geter(divisor, 0)
+      if bloque.parameters.nil?
+        result = aux.exec_proc(nil) &bloque
+      else
+        result = aux.exec_proc(ret) &bloque
+      end
       # result = bloque.binding.bind(self).call(*args, &bloque)
       # result = instance_exec args, &bloque
       raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin" unless result.is_a? TrueClass or result.is_a? FalseClass
@@ -60,7 +86,8 @@ class Module
 
   private def invariant(&bloque)
    @after_blocks ||= []
-   @after_blocks << proc_with_block_condition(bloque, "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?")
+   @after_blocks << (proc_with_block_condition &bloque)
+   #, "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?")
   end
 
   private def pre(&bloque)
@@ -80,18 +107,19 @@ class Module
       @external_level_redefine_method = false
       if local_external_level_redefine_method
         puts "algo"
-        instance_exec args, args_list, &pre unless pre.nil?
+        instance_exec 0, args, args_list, &pre unless pre.nil?
         self.class.before_blocks&.each do |proc|
           # instance_eval(&proc)
-          instance_exec args, &proc
+          instance_exec 0, args, nil, &proc
         end
       end
       ret = contractMethod.exec_on(self, args, block)
       if local_external_level_redefine_method
         self.class.after_blocks&.each do |proc|
           # instance_eval(&proc)
-          instance_exec args, &proc
+          instance_exec 0, args, nil, &proc
         end
+        instance_exec ret, args, args_list, &post unless post.nil?
         # instance_exec args, &post unless post.nil?
         # instance_eval(&post) unless post.nil?
       end
@@ -233,11 +261,11 @@ end
 # saba.convidar_de_la_jarra(lero)
 operaciones = Class.new do
   #precondición de dividir
-  pre { divisor != 1 }
+  pre { divisor != 0 }
   #postcondición de dividir
   post { |result| result * divisor == dividendo }
   def dividir(dividendo, divisor)
-    dividendo / divisor
+    dividendo / 2
   end
 
   # este método no se ve afectado por ninguna pre/post condición
