@@ -5,6 +5,11 @@
 #     * ejecuto lo que vos querias
 #     * llamo a todos los after
 #
+class ChinchulinException < StandardError
+end
+
+class ConditionError < StandardError
+end
 
 class ContractMethod
   attr_accessor :method_name
@@ -14,15 +19,9 @@ class ContractMethod
     @method_name = method_name
   end
 
-  def exec_on(instance, args)
-    @method.bind(instance).call(*args)
+  def exec_on(instance, args, block)
+    @method.bind(instance).call(*args,&block)
   end
-end
-
-class ConditionError < StandardError
-end
-
-class ChinchulinException < StandardError
 end
 
 class Module
@@ -36,20 +35,32 @@ class Module
   end
 
   def proc_with_block_condition(bloque, error_message = "Condition is not verified")
-    proc do
-      result = instance_eval(&bloque)
-      unless result.is_a? TrueClass or result.is_a? FalseClass
-        raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin"
+    proc do |list_args, list_val, *ret|
+
+      delete_methods = []
+      list_args.each_with_index do |arg, i|
+        unless arg.nil? || self.class.instance_methods(false).include?(arg)
+          self.class.define_method(arg) {list_val[i]}
+          delete_methods << arg
+        end
       end
-      unless result
-        raise ConditionError.new(error_message)
+
+      if bloque.parameters.size == 0
+        result = instance_eval(&bloque)
+      else
+        result = instance_exec ret[0], &bloque
       end
+
+      delete_methods.each { |m| self.class.remove_method m }
+
+      raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin" unless result.is_a? TrueClass or result.is_a? FalseClass
+      raise ConditionError.new error_message unless result
     end
   end
 
   private def invariant(&bloque)
    @after_blocks ||= []
-    @after_blocks << proc_with_block_condition(bloque, "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?")
+   @after_blocks << proc_with_block_condition(bloque, "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?")
   end
 
   private def pre(&bloque)
@@ -60,91 +71,52 @@ class Module
     @post = proc_with_block_condition(bloque, "No cumple la sabalera postcondicion")
   end
 
-  private def method_added(method_name, *args)
-    if @overwritten_contract_methods.nil?
-      @overwritten_contract_methods = []
-    end
-    #puts "agregando metodo #{method_name}"
 
-    if !@overwritten_contract_methods.any? {|contract_method| contract_method.method_name == method_name} && method_name != :method_added
-      #puts "modificando metodo #{method_name}"
-      contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
-      @overwritten_contract_methods << contractMethod
-      pre = @pre
-      @pre = nil
-      post = @post
-      @post = nil
-      self.define_method(method_name) do |*args|
-        @deep = 0 if @deep.nil?
-        deep_local = @deep
-        @deep += 1
-        if deep_local == 0
-          instance_eval(&pre) unless pre.nil?
-          self.class.before_blocks&.each do |proc|
-            instance_eval(&proc)
-          end
+  private def redefine_method(contractMethod, pre, post, list_args)
+    self.define_method(contractMethod.method_name) do |*args, &block|
+      @external_level_redefine_method = true if @external_level_redefine_method.nil?
+      local_external_level_redefine_method = @external_level_redefine_method
+      @external_level_redefine_method = false
+
+      if local_external_level_redefine_method
+        # instance_eval(&pre) unless pre.nil?
+        instance_exec list_args, args, &pre unless pre.nil?
+        self.class.before_blocks&.each do |proc|
+          # instance_eval(&proc)
+          instance_exec list_args, args, &proc
         end
-        ret = contractMethod.exec_on(self, args)
-        if deep_local == 0
-          self.class.after_blocks&.each do |proc|
-            instance_eval(&proc)
-          end
-          instance_eval(&post) unless post.nil?
-        end
-        @deep -= 1
-        ret
       end
+      ret = contractMethod.exec_on(self, args, block)
+      if local_external_level_redefine_method
+        self.class.after_blocks&.each do |proc|
+          # instance_eval(&proc)
+          instance_exec list_args, args, &proc
+        end
+        # instance_eval(&post) unless post.nil?
+        instance_exec list_args, args, ret, &post unless post.nil?
+      end
+      @external_level_redefine_method = local_external_level_redefine_method
+      ret
     end
+  end
+
+  private def method_added(method_name, *args)
+    @external_level_method_added = true if @external_level_method_added.nil?
+    local_external_level_method_added = @external_level_method_added
+    @external_level_method_added = false
+
+    list_args = self.instance_method(method_name).parameters.map { |(a,b)| b }
+
+    if local_external_level_method_added
+      contractMethod = ContractMethod.new(self.instance_method(method_name), method_name)
+      self.send(:redefine_method, contractMethod,  @pre, @post, list_args)
+      @pre = nil
+      @post = nil
+    end
+    @external_level_method_added = local_external_level_method_added
   end
 end
 
-#
-# class MiClase
-#
-#   attr_accessor :la_variable_sabalera
-#
-#   def initialize
-#     @la_variable_sabalera = 'aaaeeeaaa (la variable sabalera)'
-#     @la_variable_no_tan_sabalera = 'aea'
-#   end
-#
-#   before_and_after_each_call(
-#       # Bloque Before. Se ejecuta antes de cada mensaje
-#       proc { puts la_variable_sabalera },
-#       # Bloque After. Se ejecuta después de cada mensaje
-#       proc{ puts "sabale sabale #{la_variable_sabalera}"}
-#   )
-#
-#   before_and_after_each_call(
-#       # Bloque Before. Se ejecuta antes de cada mensaje
-#       proc { puts @la_variable_no_tan_sabalera },
-#       # Bloque After. Se ejecuta después de cada mensaje
-#       proc{ puts "sabale sabale #{@la_variable_no_tan_sabalera}"}
-#   )
-#
-#
-#   def sabalero_soy_-2_arg(arg1)
-#     puts "soy el metodo que tiene un argumento #{arg-2}"
-#     return -3
-#   end
-#
-#   def sabalero_soy_-1_arg(arg1, arg2)
-#     puts "tengo -1 argumentos #{arg1} #{arg2}"
-#     return -3
-#   end
-#
-#   def sabalero_soy_-3_arg
-#     puts "yo no tengo argumentos pero soy sabalero"
-#     return -3
-#   end
-# end
-
-#MiClase.
-
-# miclase = MiClase.new
-# miclase.sabalero_soy_-3_arg
-# miclase.sabalero_soy_-2_arg(1)
-# miclase.sabalero_soy_-1_arg(1, 2)
 
 
 # class Sabalero
@@ -153,9 +125,9 @@ end
 #
 #     before_and_after_each_call(
 #         # Bloque Before. Se ejecuta antes de cada mensaje
-#         proc { puts "before #{@nombre}" },
+#         proc {  },
 #         # Bloque After. Se ejecuta después de cada mensaje
-#         proc { puts "after #{@nombre}" }
+#         proc {  }
 #     )
 #
 #   invariant { amor_por_el_pulga >= 100 }
@@ -168,17 +140,65 @@ end
 #     @cantidad_de_sabalamigos = 0
 #   end
 #
-#   pre { @amor_por_el_pulga > 0 }
-#   post { amor_por_el_pulga > 0 }
-#   def convidar_de_la_jarra(otro)
-#     otro.vino_en_sangre += amor_por_el_pulga
-#     @cantidad_de_sabalamigos += 1
+#   pre {@vino_en_sangre < 1400}
+#   def otraCosa
+#     puts "yo hago otra cosa"
 #   end
 #
+#   post { @vino_en_sangre < 1400 }
+#   pre { amor_por_el_pulga > 0 }
+#   def convidar_de_la_jarra(otro)
+#     otro.vino_en_sangre += amor_por_el_pulga
+#     self.vino_en_sangre = 1300
+#     @cantidad_de_sabalamigos += 1
+#   end
 # end
 #
 #
 # saba = Sabalero.new("Saba",150, 20)
-# lero = Sabalero.new("Lero", 1300, 1300)
+# lero = Sabalero.new("Lero", 1300, 1400)
 #
 # saba.convidar_de_la_jarra(lero)
+#
+# # puts lero.nombre
+# # puts lero.vino_en_sangre
+# saba.otraCosa
+
+# class Sabalero
+#
+#   pre { vino_en_sangre < 1500 }
+#   def otraCosa
+#     puts "me estoy redefiniendo sabale"
+#   end
+#   def convidar_de_la_jarra(otro)
+#     otro.vino_en_sangre += 1
+#     @cantidad_de_sabalamigos += 1
+#   end
+# end
+#
+# #saba.vino_en_sangre= 1400
+#
+# saba.otraCosa
+#
+# print saba.vino_en_sangre
+#
+# # saba.convidar_de_la_jarra(lero)
+
+#
+#
+# operaciones = Class.new do
+#   #precondición de dividir
+#   pre { divisor != 0 }
+#   #postcondición de dividir
+#   post { |result| result * divisor == dividendo }
+#   def dividir(dividendo, divisor)
+#     dividendo / divisor
+#   end
+#
+#   # este método no se ve afectado por ninguna pre/post condición
+#   def restar(minuendo, sustraendo)
+#     minuendo - sustraendo
+#   end
+# end
+#
+# puts operaciones.new.dividir(10,0)
