@@ -154,3 +154,43 @@ describe 'PilaTests' do
 
 
 end
+
+describe 'OperacionesTest' do
+  operaciones = Class.new do
+    #precondición de dividir
+    pre { divisor != 0 }
+    #postcondición de dividir
+    post { |result| result * divisor == dividendo }
+    def dividir(dividendo, divisor)
+      dividendo / divisor
+    end
+
+    pre { divisor != 0 }
+    #postcondición de dividir
+    post { |result| result * divisor == dividendo + 1 }
+    def dividir_con_post_falopa(dividendo, divisor)
+      dividendo / divisor
+    end
+
+    # este método no se ve afectado por ninguna pre/post condición
+    def restar(minuendo, sustraendo)
+      minuendo - sustraendo
+    end
+  end
+
+  # > Operaciones.new.dividir(4, 2)
+  # => 2
+  it 'se puede dividir por 2' do
+    expect(operaciones.new().dividir(4, 2)).to be 2
+  end
+
+  # > Operaciones.new.dividir(4, 0)
+  it 'no se puede dividir por 0' do
+    expect{operaciones.new().dividir(4, 0)}.to raise_error(ConditionError)
+  end
+
+  # > Operaciones.new.dividir(4, 2)
+  it 'la post condicion no se cumple, rompe' do
+    expect{operaciones.new().dividir_con_post_falopa(4, 2)}.to raise_error(ConditionError)
+  end
+end
