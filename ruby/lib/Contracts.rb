@@ -181,8 +181,8 @@ saba = Sabalero.new("Saba",150, 20)
 saba.vino_en_sangre = 1000
 # saba.convidar_de_la_jarra(lero)
 
-puts lero.nombre
-puts lero.vino_en_sangre
+# puts lero.nombre
+# puts lero.vino_en_sangre
 saba.otraCosa
 
 class Sabalero
@@ -203,4 +203,4 @@ saba.otraCosa
 
 print saba.vino_en_sangre
 
-saba.convidar_de_la_jarra(lero)
+# saba.convidar_de_la_jarra(lero)
