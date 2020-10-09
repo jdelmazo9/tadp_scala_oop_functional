@@ -24,6 +24,38 @@ class ContractMethod
   end
 end
 
+class MethodParameters
+  def initialize(instance, list_args, list_val)
+    @instance = instance
+
+    list_args.each_with_index do |arg, i|
+      unless arg.nil?
+        self.class.define_method(arg) {list_val[i]}
+      end
+    end
+  end
+
+  def execBlock(bloque, *ret)
+
+    if bloque.parameters.size == 0
+      result = instance_eval(&bloque)
+    else
+      result = instance_exec ret[0], &bloque
+    end
+    return result
+  end
+
+  def method_missing(method, *args)
+    @instance.send(method, *args)
+    #super
+  end
+
+  def respond_to_missing?(method)
+    @instance.respond_to?(method)
+  end
+end
+
+
 class Module
   attr_accessor :after_blocks, :before_blocks
 
@@ -37,30 +69,26 @@ class Module
   def proc_with_block_condition(bloque, error_message = "Condition is not verified")
     proc do |list_args, list_val, *ret|
 
-      delete_methods = []
-      list_args.each_with_index do |arg, i|
-        unless arg.nil? || self.class.instance_methods(false).include?(arg)
-          self.class.define_method(arg) {list_val[i]}
-          delete_methods << arg
-        end
-      end
+      method_parameters = MethodParameters.new(self, list_args, list_val)
 
-      if bloque.parameters.size == 0
-        result = instance_eval(&bloque)
-      else
-        result = instance_exec ret[0], &bloque
-      end
-
-      delete_methods.each { |m| self.class.remove_method m }
+      result = method_parameters.execBlock(bloque, *ret)
 
       raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin" unless result.is_a? TrueClass or result.is_a? FalseClass
       raise ConditionError.new error_message unless result
     end
   end
 
+  def proc_for_invariant(bloque, error_message = "Condition is not verified")
+    proc do
+      result = instance_eval(&bloque)
+      raise ChinchulinException.new "no me hagas la tramposa que soy sabalero como vos, chinchulin" unless result.is_a? TrueClass or result.is_a? FalseClass
+      raise ConditionError.new error_message unless result
+    end
+  end
+
   private def invariant(&bloque)
-   @after_blocks ||= []
-   @after_blocks << proc_with_block_condition(bloque, "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?")
+    @after_blocks ||= []
+    @after_blocks << proc_for_invariant(bloque, "No pode dejar de ser sabalero papa. Y si no eras sabalero, que estas esperando?")
   end
 
   private def pre(&bloque)
