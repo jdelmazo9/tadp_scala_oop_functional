@@ -1,3 +1,4 @@
+import scala.util.Try
 //TEMATICA: ???¿¿¿
 //ENTIDADES QUE NO DUDAMOS QUE TIENEN QUE ESTAR: PARSER{<TEXTO = {ARBOL}>} (estructura facil de leer)
 //PARSER COMBINATOR (PARSER->PARSER->PARSER)
@@ -8,9 +9,12 @@
 //  require(mem.size == Micro.MEM_SIZE)
 //}
 
+class ParserErrorException(val resultado: Resultado) extends RuntimeException
+
 case object main extends App {
+
   def anyChar: Function1[String, Any] = {
-    val f = (text: String) => text.head
+    val f = (text: String) => Try(Resultado(text.head, text.tail))
     f
   }
 
@@ -29,29 +33,29 @@ case object main extends App {
     f
   }
 
-//  def integer: Function1[String, Any] = {
-//    val f = (text: String) => if("\\-?\\d+".r.pattern.matcher(text).matches()) text.toInt
-//    f
-//  }
-//
-//  def double: Function1[String, Any] = {
-//    val f = (text: String) => if("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) text.toDouble
-//    f
-//  }
-
   def integer: Function1[String, Any] = {
-    val f: PartialFunction [String, Any] = {
-      case text if ("\\-?\\d+".r.pattern.matcher(text).matches()) => text.toInt
-    }
+    val f = (text: String) => if("\\-?\\d+".r.pattern.matcher(text).matches()) text.toInt
     f
   }
 
   def double: Function1[String, Any] = {
-    val f: PartialFunction [String, Any] = {
-      case text if ("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) => text.toDouble
-    }
+    val f = (text: String) => if("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) text.toDouble
     f
   }
+
+//  def integer: Function1[String, Any] = {
+//    val f: PartialFunction [String, Any] = {
+//      case text if ("\\-?\\d+".r.pattern.matcher(text).matches()) => text.toInt
+//    }
+//    f
+//  }
+//
+//  def double: Function1[String, Any] = {
+//    val f: PartialFunction [String, Any] = {
+//      case text if ("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) => text.toDouble
+//    }
+//    f
+//  }
 
   val f: PartialFunction[(Char, String), Char] = {
     case (caracter, cadena) if caracter == cadena.head => caracter
@@ -64,4 +68,7 @@ case object main extends App {
 //  print(concatenate)
 //
 //  print(f.getClass);
+}
+
+case class Resultado(parsed: Any, notParsed: String) {
 }
