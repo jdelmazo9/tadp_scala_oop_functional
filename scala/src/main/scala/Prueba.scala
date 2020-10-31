@@ -3,72 +3,39 @@ import scala.util.Try
 //ENTIDADES QUE NO DUDAMOS QUE TIENEN QUE ESTAR: PARSER{<TEXTO = {ARBOL}>} (estructura facil de leer)
 //PARSER COMBINATOR (PARSER->PARSER->PARSER)
 
-//case class Parser(a: String) {
-//  require(a < Micro.REGISTER_SIZE && a > -Micro.REGISTER_SIZE)
-//  require(b < Micro.REGISTER_SIZE && b > -Micro.REGISTER_SIZE)
-//  require(mem.size == Micro.MEM_SIZE)
-//}
+case class Resultado(parsed: Any, notParsed: String)
 
 class ParserErrorException(val resultado: Resultado) extends RuntimeException
 
+
 case object main extends App {
 
-  def anyChar: Function1[String, Any] = {
-    val f = (text: String) => Try(Resultado(text.head, text.tail))
-    f
-  }
+  type Parser = String => Try[Resultado]
 
-  def char(character: Char): Function1[String, Any] = {
-    val f = (text: String) => if(text.head == character) text.head
-    f
-  }
+  val anyChar: Parser = text => Try(Resultado(text.head, text.tail))
 
-  def digit: Function1[String, Any] = {
-    val f = (text: String) => if(text.head.isDigit) text.head
-    f
-  }
+  val char: Char => Parser =
+    character => text => Try(text match {
+      case _ if (text.head == character) => Resultado(text.head,text.tail)
+      case _ => throw new ParserErrorException(Resultado(null,text))
+    })
 
-  def string(aString: String): Function1[String, Any] = {
-    val f = (text: String) => if(text.startsWith(aString)) aString
-    f
-  }
+  val digit: Parser = text => Try(if(text.head.isDigit) text.head)
 
-  def integer: Function1[String, Any] = {
-    val f = (text: String) => if("\\-?\\d+".r.pattern.matcher(text).matches()) text.toInt
-    f
-  }
+  val string: String => Parser = aString => text => Try(if(text.startsWith(aString)) aString)
 
-  def double: Function1[String, Any] = {
-    val f = (text: String) => if("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) text.toDouble
-    f
-  }
+  val integer: Parser = text => Try(if("\\-?\\d+".r.pattern.matcher(text).matches()) text.toInt)
 
-//  def integer: Function1[String, Any] = {
-//    val f: PartialFunction [String, Any] = {
-//      case text if ("\\-?\\d+".r.pattern.matcher(text).matches()) => text.toInt
-//    }
-//    f
-//  }
-//
-//  def double: Function1[String, Any] = {
-//    val f: PartialFunction [String, Any] = {
-//      case text if ("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) => text.toDouble
-//    }
-//    f
-//  }
+  val double: Parser = text => Try(if("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) text.toDouble)
 
-  val f: PartialFunction[(Char, String), Char] = {
-    case (caracter, cadena) if caracter == cadena.head => caracter
-  } ;
+  //Tests ahre
+  println(anyChar("hola"))
+  println(char('h')("hola"))
+  println(char('h')("cola"))
+  println(digit("2"))
+  println(string("hola")("hola mundo"))
+  println(integer("-82389"))
+  println(double("0.7328"))
 
-//  val concatenate = integer compose double
-
-
-
-//  print(concatenate)
-//
-//  print(f.getClass);
 }
 
-case class Resultado(parsed: Any, notParsed: String) {
-}
