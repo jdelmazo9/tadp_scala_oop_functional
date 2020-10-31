@@ -100,6 +100,8 @@ class Module
   end
 
 
+
+
   private def redefine_method(contractMethod, pre, post, list_args)
     self.define_method(contractMethod.method_name) do |*args, &block|
       @external_level_redefine_method = true if @external_level_redefine_method.nil?
@@ -230,3 +232,4 @@ end
 # end
 #
 # puts operaciones.new.dividir(10,0)
+

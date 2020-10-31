@@ -194,3 +194,31 @@ describe 'OperacionesTest' do
     expect{operaciones.new().dividir_con_post_falopa(4, 2)}.to raise_error(ConditionError)
   end
 end
+
+describe 'typed methods' do
+  tanque = Class.new do
+    typed({enemigo: edificio, proyectil: misil}, FixNum)
+    def atacarEdificio(enemigo, proyectil)
+      daño = proyectil.daño
+      enemigo.sufriDanio(daño)
+      daño
+    end
+
+    def sufriDanio(n)
+
+    end
+  end
+
+  edificio = Class.new do
+    def sufriDanio(n)
+    end
+  end
+
+  it 'should ' do
+    unTanque = tanque.new
+    otroTanque = tanque.new
+    unEdificio = edificio.new
+    unTanque.atacarEdificio(unEdificio, Misil.new) # OK
+    expect{unTanque.atacarEdificio(otroTanque, Misil.new)}.to raise_error(ConditionError)
+  end
+end
