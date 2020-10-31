@@ -1,3 +1,3 @@
-
-case class Resultado(parsed: Any, notParsed: String)
-class ParserErrorException(val resultado: Resultado) extends RuntimeException
+//123asdfgdigit-
+case class Resultado[+T](parsed: T, notParsed: String)
+class ParserErrorException[T](val resultado: Resultado[T]) extends RuntimeException
