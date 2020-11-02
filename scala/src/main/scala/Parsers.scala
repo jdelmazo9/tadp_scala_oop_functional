@@ -2,7 +2,7 @@ import scala.util.Try
 
 //
 sealed trait Parser[+T]{
-  def <|>[U](other: Parser[U]): Parser[Try[Resultado[T]]] ={
+  def <|>[U](other: Parser[U]): orCombinator[Any, T, U] ={
     orCombinator(this, other)
   }
 
@@ -24,7 +24,6 @@ sealed trait Parser[+T]{
 
   def parse(text: String): Try[Resultado[T]]
 }
-
 //case class integer() extends Parser[Int]
 case class char(character: Char) extends Parser[Char] {
   def parse(text: String): Try[Resultado[Char]] = {
@@ -41,7 +40,7 @@ case class char(character: Char) extends Parser[Char] {
 //  }
 //}
 
-case class orCombinator[W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[W]{
+case class orCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[W]{
   def parse(text: String): Try[Resultado[W]] = {
     if (parser1.parse(text).isSuccess) parser1.parse(text) else parser2.parse(text)
   }
@@ -58,9 +57,10 @@ case class orCombinator[W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) e
 case object pruebitas extends App {
   println(char('c').parse("chau"))
   println(char('c').parse("hau"))
-  println((orCombinator2(char('c'), char('h'))).parse("hau"))
-  println((orCombinator2(char('c'), char('h'))).parse("cau"))
-  println((orCombinator2(char('c'), char('h'))).parse("au"))
+  println((char('c') <|> char('o')).parse("cola"))
+  println(orCombinator(char('c'), char('h')).parse("hau"))
+  println((orCombinator(char('c'), char('h'))).parse("cau"))
+  println((orCombinator(char('c'), char('h'))).parse("au"))
 
 //  type Magic[+A, +B] = Either[A, B]
 //  val magic: Magic[String,Int] = "Try(Resultado)"
