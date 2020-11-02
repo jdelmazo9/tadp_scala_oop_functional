@@ -120,6 +120,7 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
       result2 <- parserSep.parse(result1.notParsed)
     } yield result1.copy(parsed = List(result1.parsed), "")// notParsed=result2.notParsed
   }
+  
 }
 
 //implicit class Parser2(parser: Parser) {
