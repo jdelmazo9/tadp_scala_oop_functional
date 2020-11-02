@@ -30,7 +30,7 @@
 ////
 //  type Parser[T] = String => Try[Resultado[T]]
 ////
-////  val anyChar: Parser = text => Try(Resultado(text.head, text.tail))
+//  val anyChar: Parser = text => Try(Resultado(text.head, text.tail))
 ////
 //  val char: Char => Parser =
 //    character => text => Try(text match {
