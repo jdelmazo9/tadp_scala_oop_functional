@@ -6,8 +6,13 @@ organization := "edu.ar.utn.tadp"
 
 scalaVersion := "2.13.2"
 
+resolvers ++= Seq(
+  Resolver.sonatypeRepo("releases"),
+  Resolver.sonatypeRepo("snapshots")
+)
 resolvers += "Artima Maven Repository" at "https://repo.artima.com/releases"
 resolvers += Resolver.sonatypeRepo("snapshots")
+
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-Xcheckinit", "-encoding", "utf8", "-feature")
 
@@ -23,10 +28,19 @@ lazy val osName = System.getProperty("os.name") match {
 }
 
 libraryDependencies ++= Seq(
+  "com.chuusai" %% "shapeless" % "2.4.0-SNAPSHOT"
+)
+
+libraryDependencies ++= Seq(
+  "com.chuusai" %% "shapeless" % "2.3.3"
+)
+
+libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.0" % "test",
   "org.scalactic" %% "scalactic" % "3.2.0",
   "org.scalafx" %% "scalafx" % "14-R19"
 )
+
 
 // Add JavaFX dependencies
 lazy val javaFXModules = Seq("base", "controls", "fxml", "graphics", "media", "swing", "web")
