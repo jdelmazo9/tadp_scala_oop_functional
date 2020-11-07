@@ -3,53 +3,6 @@ import tadp.internal.TADPDrawingAdapter
 
 import scala.util.{Failure, Success, Try}
 
-//println(utilities.aplanandoAndo(List(1,2)))
-
-case object utilities {
-  def aplanandoAndo[T<: Any](algoAplanableONoTanto: Any): List[T] =
-    algoAplanableONoTanto match {
-      case None => List()
-      case (a, b) => (aplanandoAndo(a) ++ aplanandoAndo(b)).asInstanceOf[List[T]]
-      case List(a :: b) => (a :: aplanandoAndo(b)).asInstanceOf[List[T]]
-      case a :: b => (a :: aplanandoAndo(b)).asInstanceOf[List[T]]
-      case a if a != Nil => List(a).asInstanceOf[List[T]]
-      case _ => List()
-    }
-
-//  def aplanandoAndoUnitipado[T](algo: (T, List[T])): List[T] = {
-//    algo match {
-//      case (a,List()) => List(a)
-//      case None => List()
-//      case (a,b) => a :: aplanandoAndoUnitipado(b,List(b))
-//      case List(a::b) => a :: aplanandoAndoUnitipado(b)
-//      case a::b => a :: aplanandoAndoUnitipado(b)
-//      case a if a != Nil => List(a)
-//      case _ => List()
-//    }
-//  }
-
-//  val tuplaDe: Product => Product = {
-//    case ((a,b),c) => Tuple3(a,b,c)
-//    case ((a,b,c),d) => Tuple4(a,b,c,d)
-//    case (a,None) => Tuple1(a)
-//    case (None, b) => Tuple1(b)
-//    case (a, List(None)) => Tuple1(a)
-//    case (List(None), b) => Tuple1(b)
-//    case loquevenga => loquevenga
-//  }
-
-  val tuplaDe: Product => List[Any] = {
-    aplanandoAndo(_)
-  }
-}
-
-//def aplanandoLaTupla(tuple: Any): List[Any] = {
-//  tuple match {
-//    case (a,b) => (a :: aplanandoLaTupla(b))
-//    case _ => List(tuple)
-//  }
-//}
-//
 sealed trait Parser[+T]{
   def <|>[U<:W, W>:T](other: Parser[U]): orCombinator[W, T, U] ={
     orCombinator[W,T,U](this, other)
@@ -239,8 +192,6 @@ case class mapCombinator[T, U](parser: Parser[T])(mapFunction: T => U) extends P
   }
 }
 
-
-
 case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[List[T]] {
   def parse(text:String): Try[Resultado[List[T]]] = {//: Try[Resultado[List[T]]]
     for {
@@ -257,7 +208,7 @@ case object parserEspacios extends Parser[List[Char]] {
 }
 
 case class Punto(x: Double, y: Double){
-  def position() ={
+  def position(): (Double, Double) ={
     (x,y)
   }
 }
@@ -272,15 +223,15 @@ case object parserPunto extends Parser[Punto] {
 }
 
 case class Cuadrado(topLeft: Punto, bottomRight: Punto){
-  def daleeeeee_pa() ={
+  def daleeeeee_pa(): ((Double, Double),(Double, Double)) ={
     (topLeft.position(),bottomRight.position())
   }
 
-  def dale() = {
+  def dale(): (Double, Double) = {
     topLeft.position()
   }
 
-  def paaaaaa() = {
+  def paaaaaa(): (Double, Double) = {
     bottomRight.position()
   }
 }
