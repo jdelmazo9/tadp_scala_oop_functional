@@ -51,13 +51,12 @@ case object utilities {
 //}
 //
 sealed trait Parser[+T]{
-  def <|>[U](other: Parser[U]): orCombinator[Any, T, U] ={
-    orCombinator(this, other)
+  def <|>[U<:W, W>:T](other: Parser[U]): orCombinator[W, T, U] ={
+    orCombinator[W,T,U](this, other)
   }
-//A >: Bicycle <: Vehicle
-  //case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[List[W]] {
+
   def <>[U<:W, W>:T](other: Parser[U]): concatCombinator[W,T,U] ={
-    concatCombinator(this, other)
+    concatCombinator[W,T,U](this, other)
   }
 
   def ~>[U](other: Parser[U]): rightmostCombinator[T, U] ={
@@ -68,17 +67,17 @@ sealed trait Parser[+T]{
     leftmostCombinator(this, other)
   }
 
-  def *(): clausuraDeKleene[Any] = {
-    clausuraDeKleene(this)
+  def *(): clausuraDeKleene[T] = {
+    clausuraDeKleene[T](this)
   }
 
-  def +(): clausuraDeKleenePositiva[Any] = {
-    clausuraDeKleenePositiva(this)
+  def +(): clausuraDeKleenePositiva[T] = {
+    clausuraDeKleenePositiva[T](this)
   }
 
 //  def satisfies():
 //  def map[U](mapFunction: T => U): mapCombinator[T,U] = {
-//    mapCombinator(this, mapFunction)
+//    mapCombinator(this)(mapFunction)
 //  }
 
 
@@ -215,24 +214,24 @@ case class opt[+T>: None.type](parser: Parser[T]) extends Parser[T] {
 }
 
 //*: la clausura de Kleene se aplica a un parser, convirtiéndolo en otro que se puede aplicar todas las veces que sea posible o 0 veces. El resultado debería ser una lista que contiene todos los valores que hayan sido parseados (podría no haber ninguno).
-case class clausuraDeKleene[+T >: Null](parser: Parser[T]) extends Parser[List[T]] {
+case class clausuraDeKleene[+T](parser: Parser[T]) extends Parser[List[T]] {
   def parse(text:String): Try[Resultado[List[T]]] = {
     for {
       uno <- opt(parser <> this).parse(text)
-    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed).asInstanceOf[List[T]])
+    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
   }
 }
 //
 ////  +: es como la clausura de Kleene pero requiere que el parser se aplique al menos UNA vez.
-case class clausuraDeKleenePositiva[+T >: Null](parser: Parser[T]) extends Parser[List[Any]] {
-  def parse(text:String): Try[Resultado[List[Any]]] = {
+case class clausuraDeKleenePositiva[+T](parser: Parser[T]) extends Parser[List[T]] {
+  def parse(text:String): Try[Resultado[List[T]]] = {
     for {
       uno <- (parser <> clausuraDeKleene(parser)).parse(text)
     } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
   }
 }
 
-case class mapCombinator[T, U](parser: Parser[T], mapFunction: T => U) extends Parser[U] {
+case class mapCombinator[T, U](parser: Parser[T])(mapFunction: T => U) extends Parser[U] {
   def parse(text:String): Try[Resultado[U]] = {//: Try[Resultado[List[T]]]
     for{
       result <- parser.parse(text)
@@ -242,18 +241,18 @@ case class mapCombinator[T, U](parser: Parser[T], mapFunction: T => U) extends P
 
 
 
-case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[List[Any]] {
-  def parse(text:String): Try[Resultado[List[Any]]] = {//: Try[Resultado[List[T]]]
+case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[List[T]] {
+  def parse(text:String): Try[Resultado[List[T]]] = {//: Try[Resultado[List[T]]]
     for {
       uno <- ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
     } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
   }
 }
 
-case object parserEspacios extends Parser[List[Any]] {
-  def parse(text: String): Try[Resultado[List[Any]]] = {
-    satisfies(anyChar())(_.isWhitespace).*.parse(text)
-//    (char(' ') <|> char('\n')).*.parse(text)
+case object parserEspacios extends Parser[List[Char]] {
+  def parse(text: String): Try[Resultado[List[Char]]] = {
+//    (satisfies(anyChar())(_.isWhitespace)).*.parse(text)
+    (char(' ') <|> char('\n') <|> char('\t')).*.parse(text)
   } //Claúsula de kleene con n cantidad de espacios
 }
 
@@ -267,7 +266,7 @@ case object parserPunto extends Parser[Punto] {
   def parse(text: String): Try[Resultado[Punto]] = {
     val parserPartes = (double() <~ parserEspacios <~ string("@")) <> (parserEspacios ~> double())
     parserPartes.parse(text).map(resultado => resultado.parsed match {
-      case List(a,b) => Resultado(Punto(a.asInstanceOf[Double],b.asInstanceOf[Double]), resultado.notParsed)
+      case List(a,b) => Resultado(Punto(a,b), resultado.notParsed)
     })
   }
 }
@@ -299,13 +298,13 @@ case object parserCuadrado extends Parser[Cuadrado] {
   def parse(text: String): Try[Resultado[Cuadrado]] = {
     val parserPartes = string("cuadrado[") ~> (parserPunto <> (char(',') ~> parserPunto)) <~ char(']')
     parserPartes.parse(text).map(resultado => resultado.parsed match {
-      case List(a,b) => Resultado(Cuadrado(a.asInstanceOf[Punto],b.asInstanceOf[Punto]), resultado.notParsed)
+      case List(a,b) => Resultado(Cuadrado(a,b), resultado.notParsed)
     })
   }
 }
 
 case object pruebitas extends App {
-  println(parserCuadrado.parse("cuadrado[0 @ 100,200 @ 300]"))
+//  println(parserCuadrado.parse("cuadrado[0 @ 100,200 @ 300]"))
   val cuadrado = parserCuadrado.parse("cuadrado[150 @ 100,200 @ 300]").get.parsed
   TADPDrawingAdapter
     .forScreen { adapter =>
