@@ -8,7 +8,10 @@ package object Dibujante {
       case Cuadrado(topLeft, bottomRight) => adapterInicial.copy().rectangle(topLeft.position(), bottomRight.position())
 
       // Transformaciones
-      case Colorete(hijo, color)          => dibujar(hijo,adapterInicial.copy().beginColor(color))
+      case Colorete(hijo, color)          => dibujar(hijo,adapterInicial.copy().beginColor(color)).end()
+      // rotar
+      // trasladar
+      // escala
 
       // Grupo
       case Grupo(hijos)                   => hijos.foldLeft(adapterInicial) { case (adapter, nodo) => dibujar(nodo, adapter) }
