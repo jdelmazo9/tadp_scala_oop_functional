@@ -3,9 +3,9 @@
 ////////ENTIDADES QUE NO DUDAMOS QUE TIENEN QUE ESTAR: PARSER{<TEXTO = {ARBOL}>} (estructura facil de leer)
 ////////PARSER COMBINATOR (PARSER->PARSER->PARSER)
 //////
-////case class Resultado(parsed: Any, notParsed: String)
+////case class tadp.Resultado(parsed: Any, notParsed: String)
 //////
-////class ParserErrorException(val resultado: Resultado) extends RuntimeException
+////class tadp.ParserErrorException(val resultado: tadp.Resultado) extends RuntimeException
 //////
 //////
 //
@@ -28,14 +28,14 @@
 //
 //case object tuviejamain extends App {
 ////
-//  type Parser[T] = String => Try[Resultado[T]]
+//  type Parser[T] = String => Try[tadp.Resultado[T]]
 ////
-//  val anyChar: Parser = text => Try(Resultado(text.head, text.tail))
+//  val anyChar: Parser = text => Try(tadp.Resultado(text.head, text.tail))
 ////
 //  val char: Char => Parser =
 //    character => text => Try(text match {
-//      case _ if (text.head == character) => Resultado(text.head,text.tail)
-//      case _ => throw new ParserErrorException(Resultado(null,text))
+//      case _ if (text.head == character) => tadp.Resultado(text.head,text.tail)
+//      case _ => throw new tadp.ParserErrorException(tadp.Resultado(null,text))
 //    })
 //
 ////  class Parser1(val p: Parser) {

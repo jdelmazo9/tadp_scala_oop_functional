@@ -12,37 +12,37 @@
 //
 //case object main extends App{
 //
-//  def parse(parser: Parser, text: String): Try[Resultado] = {
+//  def parse(parser: Parser, text: String): Try[tadp.Resultado] = {
 //    parser match {
 //      case char(character)              => Try(text match {
-//                                                      case _ if (text.head == character) => Resultado(text.head, text.tail)
-//                                                      case _ => throw new ParserErrorException(Resultado(null, text))
+//                                                      case _ if (text.head == character) => tadp.Resultado(text.head, text.tail)
+//                                                      case _ => throw new tadp.ParserErrorException(tadp.Resultado(null, text))
 //                                                    })
 //
 //      case string(aString)              => Try(text match {
-//                                                      case _ if (text.startsWith(aString)) => Resultado(aString, text.substring(aString.length))
-//                                                      case _ => throw new ParserErrorException(Resultado(null, text))
+//                                                      case _ if (text.startsWith(aString)) => tadp.Resultado(aString, text.substring(aString.length))
+//                                                      case _ => throw new tadp.ParserErrorException(tadp.Resultado(null, text))
 //                                                    })
 //
 //      case integer()                    => Try("\\-?\\d+".r.findFirstMatchIn(text) match {
-//                                                      case Some(i) => Resultado(i.group(0), text.substring(i.group(0).length))
-//                                                      case _ => throw new ParserErrorException(Resultado(null, text))
+//                                                      case Some(i) => tadp.Resultado(i.group(0), text.substring(i.group(0).length))
+//                                                      case _ => throw new tadp.ParserErrorException(tadp.Resultado(null, text))
 //                                                  })
 //
 //      case orCombinator(p1, p2)         => if (parse(p1, text).isSuccess) parse(p1, text) else parse(p2, text)
 //
 //      case concatCombinator(p1,p2)      => for {
-//                                              result1 <- parse(p1, text) // Resultado("hola", "mundo!")
+//                                              result1 <- parse(p1, text) // tadp.Resultado("hola", "mundo!")
 //                                              result2 <- parse(p2, result1.notParsed)
 //                                            } yield result2.copy(parsed = (result1.parsed, result2.parsed))
 //
 //      case rightmostCombinator(p1,p2)   => for {
-//                                              result1 <- parse(p1, text) // Resultado("hola", "mundo!")
+//                                              result1 <- parse(p1, text) // tadp.Resultado("hola", "mundo!")
 //                                              result2 <- parse(p2, result1.notParsed)
 //                                            } yield result2
 //
 //      case leftmostCombinator(p1,p2)    => for {
-//                                              result1 <- parse(p1, text) // Resultado("hola", "mundo!")
+//                                              result1 <- parse(p1, text) // tadp.Resultado("hola", "mundo!")
 //                                              result2 <- parse(p2, result1.notParsed)
 //                                            } yield result1.copy(notParsed = result2.notParsed)
 //
@@ -59,7 +59,7 @@
 ////                                            } yield result1
 ////
 ////      }
-////        val recursive: Parser => Parser => Resultado => Try[Resultado] =
+////        val recursive: Parser => Parser => tadp.Resultado => Try[tadp.Resultado] =
 ////          cont => {
 ////            sep => {
 ////              prevResult => {
@@ -80,18 +80,18 @@
 ////            return r1
 ////          }
 ////        }
-////        Try(throw new ParserErrorException(Resultado(null, text)))
+////        Try(throw new tadp.ParserErrorException(tadp.Resultado(null, text)))
 //////        val r1 = parse(cont, text)
 ////      }
 //
 //
 //
 ////        text match {
-////        case _ if text.isEmpty => Try(throw new ParserErrorException(Resultado(null, text)))
+////        case _ if text.isEmpty => Try(throw new tadp.ParserErrorException(tadp.Resultado(null, text)))
 ////        case _ => for { //123-456
-////                result1 <- parse(cont, text) //Resultado(123, -456)
-//////              result2 <- parse(sep, result1.notParsed) if !result1.notParsed.isEmpty //Resultado(-, 456)
-//////              result3 <- parse(cont, result2.notParsed) //Resultado(-, 456)
+////                result1 <- parse(cont, text) //tadp.Resultado(123, -456)
+//////              result2 <- parse(sep, result1.notParsed) if !result1.notParsed.isEmpty //tadp.Resultado(-, 456)
+//////              result3 <- parse(cont, result2.notParsed) //tadp.Resultado(-, 456)
 //////              if !result1.notParsed.isEmpty
 //////              result3 <- parse(sepByCombinator(sep, cont), result1.notParsed)
 ////                result2 <- parse(sepByCombinator(sep, cont), result1.notParsed)

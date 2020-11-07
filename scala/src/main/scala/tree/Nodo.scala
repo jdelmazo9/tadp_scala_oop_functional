@@ -2,38 +2,19 @@ package tree
 
 import scalafx.scene.paint.Color
 import tadp._
-import tadp.internal.TADPDrawingAdapter
 
-abstract class Nodo(){
-}
+abstract class Nodo()
 
 // Figuras
-abstract class Figura() extends Nodo(){
-  def dibujeMaestro(adapter: TADPDrawingAdapter): TADPDrawingAdapter
-}
+abstract class Figura() extends Nodo()
 
-case class Circulo(center: Punto, radius: Double) extends Figura(){
-  def dibujeMaestro(adapter: TADPDrawingAdapter): TADPDrawingAdapter = {
-    adapter.circle(center.position(), radius)
-  }
-}
+case class Circulo(center: Punto, radius: Double) extends Figura()
 
-case class Cuadrado(topLeft: Punto, bottomRight: Punto) extends Figura(){
-  def dibujeMaestro(adapter: TADPDrawingAdapter): TADPDrawingAdapter = {
-    adapter.rectangle(topLeft.position(), bottomRight.position())
-  }
-}
+case class Cuadrado(topLeft: Punto, bottomRight: Punto) extends Figura()
 
 // Transformacion
-abstract class Transformacion(hijo: Nodo) extends Nodo(){
-  def dibujeMaestro(adapter: TADPDrawingAdapter): TADPDrawingAdapter
-}
+abstract class Transformacion(hijo: Nodo) extends Nodo()
+case class Colorete(hijo: Nodo, color: Color) extends Transformacion(hijo)
 
-// @TODO esto es re funcionaloso
-case class Colorete(hijo: Nodo, color: Color) extends Transformacion(hijo){
-  def dibujeMaestro(adapter: TADPDrawingAdapter): TADPDrawingAdapter = {
-    val a = adapter.beginColor(color)
-    val b = hijo.dibujeMaestro(a)
-    b.end()
-  }
-}
+// Grupo
+case class Grupo(hijos: List[Nodo]) extends Nodo()

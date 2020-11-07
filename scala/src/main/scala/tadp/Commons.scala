@@ -1,3 +1,5 @@
+package tadp
+
 case class Resultado[+T](parsed: T, notParsed: String)
 class ParserErrorException[T](val resultado: Resultado[T]) extends RuntimeException
 
@@ -11,4 +13,10 @@ case object utilities {
       case a if a != Nil => List(a).asInstanceOf[List[T]]
       case _ => List()
     }
+}
+
+case class Punto(x: Double, y: Double){
+  def position(): (Double, Double) ={
+    (x,y)
+  }
 }
