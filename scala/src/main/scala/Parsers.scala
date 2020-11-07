@@ -1,14 +1,23 @@
-import scala.util.Try
+import scala.runtime.Nothing$
+import scala.util.{Failure, Success, Try}
 
 //println(utilities.aplanandoAndo(List(1,2)))
 
 case object utilities {
   val aplanandoAndo: Any => List[Any] = {
+    case None => List()
     case (a,b) => a :: aplanandoAndo(b)
     case List(a::b) => a :: aplanandoAndo(b)
     case a::b => a :: aplanandoAndo(b)
     case a if a != Nil => List(a)
     case _ => List()
+  }
+  val tuplaDe: (Any, Any) => (Any) = {
+    case (a,None) => (a)
+    case (None, b) => (b)
+    case (a, List(None)) => (a)
+    case (List(None), b) => (b)
+    case loquevenga => (loquevenga)
   }
 }
 
@@ -24,7 +33,7 @@ sealed trait Parser[+T]{
     orCombinator(this, other)
   }
 
-  def <>[U](other: Parser[U]): Parser[(T,U)] ={
+  def <>[U](other: Parser[U]): Parser[(Any)] ={
     concatCombinator(this, other)
   }
 
@@ -104,12 +113,12 @@ case class orCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) 
   }
 }
 
-case class concatCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) extends Parser[(T,U)] {
-  def parse(text:String): Try[Resultado[(T,U)]] = {
+case class concatCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) extends Parser[(Any)] {
+  def parse(text:String): Try[Resultado[(Any)]] = { //Try[Resultado[(T,U)]] = {
     for {
       result1 <- parser1.parse(text) // Resultado("hola", "mundo!")
       result2 <- parser2.parse(result1.notParsed)
-    } yield result2.copy(parsed = (result1.parsed, result2.parsed))
+    } yield result2.copy(parsed = utilities.tuplaDe(result1.parsed, result2.parsed))
   }
 }
 
@@ -140,6 +149,60 @@ case class leftmostCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) ext
 // 123-456-789          Cont Sep Cont Sep Cont
 // 123-456-789-100      Cont Sep Cont Sep Cont Sep Cont
 // 123-.........-121
+
+//CHECK DEL ANY PARA LA FUNCION CONDITION => TODO: Debería ser T y tira varianza y contravarianza
+case class satisfies[+T](parser: Parser[T], condition: Any => Boolean) extends Parser[T] {
+  def parse(text:String): Try[Resultado[T]] = {//: Try[Resultado[List[T]]]
+    parser.parse(text) match {
+        case Failure(e) => Failure(e)
+        case success if condition(success.get.parsed) => success
+        case _ => Try(throw new ParserErrorException(Resultado(null, text)))
+    }
+//    for {
+//      result <- parser.parse(text)
+//      if condition(result.parsed)
+//    } yield result
+  }
+}
+
+
+
+//TODO: OTRA IDEA ES HACER EL PARSER QUE NO PARSEA NADA (EL FALSO PARSER)
+case class opt[+T>: None.type](parser: Parser[T]) extends Parser[T] {
+  def parse(text:String): Try[Resultado[T]] = {//: Try[Resultado[List[T]]]
+    parser.parse(text) match {
+//      case Failure(e) => Success(Resultado(parsed = null, notParsed = text))
+      case Failure(e) => Success(Resultado(None, text))
+      case success => success
+    }
+  }
+}
+
+//*: la clausura de Kleene se aplica a un parser, convirtiéndolo en otro que se puede aplicar todas las veces que sea posible o 0 veces. El resultado debería ser una lista que contiene todos los valores que hayan sido parseados (podría no haber ninguno).
+case class clausuraDeKleene[+T >: Null](parser: Parser[T]) extends Parser[List[Any]] {
+  def parse(text:String): Try[Resultado[List[Any]]] = {
+    for {
+      uno <- opt(parser <> this).parse(text)
+    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
+  }
+}
+
+//  +: es como la clausura de Kleene pero requiere que el parser se aplique al menos UNA vez.
+case class clausuraDeKleenePositiva[+T >: Null](parser: Parser[T]) extends Parser[List[Any]] {
+  def parse(text:String): Try[Resultado[List[Any]]] = {
+    for {
+      uno <- (parser <> clausuraDeKleene(parser)).parse(text)
+    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
+  }
+}
+
+case class map[T, U](parser: Parser[T], mapFunction: T => U) extends Parser[U] {
+  def parse(text:String): Try[Resultado[U]] = {//: Try[Resultado[List[T]]]
+    for{
+      result <- parser.parse(text)
+    } yield result.copy(parsed = mapFunction(result.parsed))
+  }
+}
 
 case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[List[Any]] {
   def parse(text:String): Try[Resultado[List[Any]]] = {//: Try[Resultado[List[T]]]
@@ -178,7 +241,13 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
 
 case object pruebitas extends App {
 
+//  def isInt(algo: Any): Boolean = {
+//    algo.getClass.isInstanceOf[Int]
+//  }
 
+  val isString: Any => Boolean = {
+    algo => algo.isInstanceOf[String]//algo.getClass.equals("String".getClass)
+  }
 
 
 //  println("Tests de Parsers individuales")
@@ -215,11 +284,13 @@ case object pruebitas extends App {
 //      print("\t\t3. "); println(orCombinator(char('c'), char('h')).parse("hau")) //Parsea con el segundo
 //      print("\t\t4. "); println(orCombinator(char('c'), char('h')).parse("cau")) //Parsea con el primero
 //      print("\t\t5. "); println(orCombinator(char('c'), char('h')).parse("au")) //Falla
-//  println("\tConcat combinator: ")
-//      print("\t\t1. "); println((string("hola") <> string("mundo")).parse("holamundo")) //Parsea el primero y el segundo
-//      print("\t\t1. "); println((string("hola") <> string("chau")).parse("holamundo")) //Falla: Parsea el primero y no el segundo
-//      print("\t\t1. "); println((string("caca") <> string("mundo")).parse("holamundo")) //Falla: No parsea el primero
-//  println("\tRightmost combinator: ")
+  println("\tConcat combinator: ")
+      print("\t\t1. "); println((string("hola") <> string("mundo")).parse("holamundo")) //Parsea el primero y el segundo
+      print("\t\t1. "); println((string("hola") <> string("chau")).parse("holamundo")) //Falla: Parsea el primero y no el segundo
+      print("\t\t1. "); println((string("caca") <> string("mundo")).parse("holamundo")) //Falla: No parsea el primero
+      print("\t\t1. "); println((opt(string("caca")) <> string("hola")).parse("holamundo")) //Falla: No parsea el primero
+
+  //  println("\tRightmost combinator: ")
 //    print("\t\t1. "); println((string("hola") ~> string("mundo")).parse("holamundo")) //Funciona, devuelve el de la derecha
 //    print("\t\t2. "); println((string("caca") ~> string("mundo")).parse("holamundo")) //Falla: no parsea el de la izquierda
 //    print("\t\t3. "); println((string("hola") ~> string("mudo")).parse("holamundo")) //Falla: no parsea el de la derecha
@@ -227,20 +298,44 @@ case object pruebitas extends App {
 //    print("\t\t1. "); println((string("hola") <~ string("mundo")).parse("holamundo")) //Funciona, devuelve el de la derecha
 //    print("\t\t2. "); println((string("caca") <~ string("mundo")).parse("holamundo")) //Falla: no parsea el de la izquierda
 //    print("\t\t3. "); println((string("hola") <~ string("mudo")).parse("holamundo")) //Falla: no parsea el de la derecha
-  println("\tSeparated-by combinator: ")
-    print("\t\t1. "); println(sepByCombinator(integer(),char('-')).parse("123-abc"))
-    print("\t\t2. "); println(sepByCombinator(integer(),char('-')).parse(""))
-    print("\t\t3. "); println(sepByCombinator(integer(),char('-')).parse("123"))
-    print("\t\t4. "); println(sepByCombinator(integer(),char('-')).parse("123-456"))
-    print("\t\t5. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789"))
-    print("\t\t6. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-000"))
-    print("\t\t7. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-aaa"))
-    print("\t\t8. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-"))
-    print("\t\t9. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789--"))
-    print("\t\t10. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-789-95"))
-    print("\t\t10. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-789-95---1--2--0-0-0-0-0-0-"))
+//  println("\tSeparated-by combinator: ")
+//    print("\t\t1. "); println(sepByCombinator(integer(),char('-')).parse("123-abc"))
+//    print("\t\t2. "); println(sepByCombinator(integer(),char('-')).parse(""))
+//    print("\t\t3. "); println(sepByCombinator(integer(),char('-')).parse("123"))
+//    print("\t\t4. "); println(sepByCombinator(integer(),char('-')).parse("123-456"))
+//    print("\t\t5. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789"))
+//    print("\t\t6. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-000"))
+//    print("\t\t7. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-aaa"))
+//    print("\t\t8. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-"))
+//    print("\t\t9. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789--"))
+//    print("\t\t10. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-789-95"))
+//    print("\t\t10. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-789-95---1--2--0-0-0-0-0-0-"))
+//  println("\tSatisfies combinator: ")
+//  print("\t\t1. "); println(satisfies(string("hola"), isString).parse("hola mundo!"))
+//  print("\t\t2. "); println(satisfies(anyChar(), isString).parse("hola mundo!"))
+//  print("\t\t3. "); println(satisfies(string("hola"), isString).parse("hol mundo!"))
+//  println("\tOpt combinator: ")
+//  print("\t\t1. "); println(opt(satisfies(string("hola"), isString)).parse("hola mundo!"))
+//  print("\t\t2. "); println(opt(satisfies(anyChar(), isString)).parse("hola mundo!"))
+//  println("\tMap combinator: ")
+//  print("\t\t1. "); println(map(integer(), (x:Int) => x * x).parse("12 mundo!"))
+//  print("\t\t2. "); println(map(integer(), (x:Int) => x * x).parse("hola mundo!"))
+  println("\tClausura de Kleene combinator: ")
+  print("\t\t1. "); println(clausuraDeKleene(anyChar()).parse("12 mundo!"))
+  print("\t\t2. "); println(clausuraDeKleene(string("hola")).parse("holaholahola mundo!"))
+  print("\t\t3. "); println(clausuraDeKleene(string("hola")).parse("chau mundo!"))
+  println("\tClausura de Kleene Positiva combinator: ")
+  print("\t\t1. "); println(clausuraDeKleenePositiva(anyChar()).parse("12 mundo!"))
+  print("\t\t2. "); println(clausuraDeKleenePositiva(string("hola")).parse("holaholahola mundo!"))
+  print("\t\t3. "); println(clausuraDeKleenePositiva(string("hola")).parse("chau mundo!"))
 
-//  print(((23, "foo"), (), (true, 2.0)) flatMap identity)
+
+//  case class Persona(nombre: String, apellido: String)
+//  val personaParser = (alphaNum.* <> (char(' ') ~> alphaNum.*))
+//    .map { case (nombre, apellido) => Persona(nombre, apellido) }
+
+
+  //  print(((23, "foo"), (), (true, 2.0)) flatMap identity)
 //  println(utilities.aplanandoAndo((1,(2,3))))
 //  println(utilities.aplanandoAndo((1,(2,(2,(2,(2,3)))))))
 

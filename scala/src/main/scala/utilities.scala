@@ -8,6 +8,12 @@ case object utilities2 extends App{
     //    case a::b =>
   }
 
+  val tuplaDe: (Any, Any) => (Any) = {
+    case (a,None) => (a)
+    case (None, b) => (b)
+    case loquevenga => (loquevenga)
+  }
+
 //  println(aplanandoAndo2(List(1,2)))
   println(aplanandoAndo2(List(1,2,3)))
   println(aplanandoAndo2(List(1,List(1,2))))
