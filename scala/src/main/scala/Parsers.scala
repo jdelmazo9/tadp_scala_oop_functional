@@ -253,39 +253,52 @@ case object parserEspacios extends Parser[List[Any]] {
     char(' ').*.parse(text) //Claúsula de kleene con n cantidad de espacios
 }
 
-case class Punto(x: Any, y: Any)
+case class Punto(x: Double, y: Double){
+  def position() ={
+    (x,y)
+  }
+}
 
 case object parserPunto extends Parser[Punto] {
   def parse(text: String): Try[Resultado[Punto]] = {
     val parserPartes = (double() <~ parserEspacios <~ string("@")) <> (parserEspacios ~> double())
     parserPartes.parse(text).map(resultado => resultado.parsed match {
-      case List(a,b) => Resultado(Punto(a,b), resultado.notParsed)
+      case List(a,b) => Resultado(Punto(a.asInstanceOf[Double],b.asInstanceOf[Double]), resultado.notParsed)
     })
   }
 }
 
 case class Cuadrado(topLeft: Punto, bottomRight: Punto){
-  def daleeeeee_pa(): (Punto, Punto) ={
-    (topLeft,bottomRight)
+  def daleeeeee_pa() ={
+    (topLeft.position(),bottomRight.position())
+  }
+
+  def dale() = {
+    topLeft.position()
+  }
+
+  def paaaaaa() = {
+    bottomRight.position()
   }
 }
 
 case object parserCuadrado extends Parser[Cuadrado] {
   def parse(text: String): Try[Resultado[Cuadrado]] = {
-    val parserPartes = string("cuadrado[") ~> (parserPunto <> (char(',') ~> parserPunto) <> (char(',') ~> parserPunto) <> (char(',') ~> parserPunto)) <~ char(']')
+    val parserPartes = string("cuadrado[") ~> (parserPunto <> (char(',') ~> parserPunto)) <~ char(']')
     parserPartes.parse(text).map(resultado => resultado.parsed match {
-      case List(a,b) => Resultado(Cuadrado(a,b), resultado.notParsed)
+      case List(a,b) => Resultado(Cuadrado(a.asInstanceOf[Punto],b.asInstanceOf[Punto]), resultado.notParsed)
     })
   }
 }
 
 case object pruebitas extends App {
   println(parserCuadrado.parse("cuadrado[0 @ 100,200 @ 300]"))
+  val cuadrado = parserCuadrado.parse("cuadrado[150 @ 100,200 @ 300]").get.parsed
   TADPDrawingAdapter
     .forScreen { adapter =>
       adapter
         .beginColor(Color.rgb(100, 100, 100))
-        .rectangle(parserCuadrado.parse("cuadrado[0 @ 100,200 @ 300]").get.parsed.daleeeeee_pa())
+        .rectangle(cuadrado.dale(), cuadrado.paaaaaa())
         .end()
     }
 }
