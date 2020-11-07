@@ -6,14 +6,15 @@ import scala.util.{Failure, Success, Try}
 //println(utilities.aplanandoAndo(List(1,2)))
 
 case object utilities {
-  val aplanandoAndo: Any => List[Any] = {
-    case None => List()
-    case (a,b) => aplanandoAndo(a) ++ aplanandoAndo(b)
-    case List(a::b) => a :: aplanandoAndo(b)
-    case a::b => a :: aplanandoAndo(b)
-    case a if a != Nil => List(a)
-    case _ => List()
-  }
+  def aplanandoAndo[T<: Any](algoAplanableONoTanto: Any): List[T] =
+    algoAplanableONoTanto match {
+      case None => List()
+      case (a, b) => (aplanandoAndo(a) ++ aplanandoAndo(b)).asInstanceOf[List[T]]
+      case List(a :: b) => (a :: aplanandoAndo(b)).asInstanceOf[List[T]]
+      case a :: b => (a :: aplanandoAndo(b)).asInstanceOf[List[T]]
+      case a if a != Nil => List(a).asInstanceOf[List[T]]
+      case _ => List()
+    }
 
 //  def aplanandoAndoUnitipado[T](algo: (T, List[T])): List[T] = {
 //    algo match {
@@ -53,8 +54,9 @@ sealed trait Parser[+T]{
   def <|>[U](other: Parser[U]): orCombinator[Any, T, U] ={
     orCombinator(this, other)
   }
-
-  def <>[U](other: Parser[U]): Parser[List[Any]] ={
+//A >: Bicycle <: Vehicle
+  //case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[List[W]] {
+  def <>[U<:W, W>:T](other: Parser[U]): concatCombinator[W,T,U] ={
     concatCombinator(this, other)
   }
 
@@ -147,14 +149,14 @@ case class orCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) 
     if (parser1.parse(text).isSuccess) parser1.parse(text) else parser2.parse(text)
   }
 }
-
+// 1? <> 5*
 //case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[Product] {
-case class concatCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) extends Parser[List[Any]] {
-  def parse(text:String): Try[Resultado[List[Any]]] = {
+case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[List[W]] {
+  def parse(text:String): Try[Resultado[List[W]]] = {
     for {
       result1 <- parser1.parse(text) // Resultado("hola", "mundo!")
       result2 <- parser2.parse(result1.notParsed)
-    } yield result2.copy(parsed = utilities.tuplaDe(result1.parsed, result2.parsed))
+    } yield result2.copy(parsed = utilities.aplanandoAndo(result1.parsed, result2.parsed))
   }
 }
 
@@ -187,7 +189,7 @@ case class leftmostCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) ext
 // 123-.........-121
 
 //CHECK DEL ANY PARA LA FUNCION CONDITION => TODO: Debería ser T y tira varianza y contravarianza
-case class satisfies[+T](parser: Parser[T], condition: Any => Boolean) extends Parser[T] {
+case class satisfies[T](parser: Parser[T])(condition: T => Boolean) extends Parser[T] {
   def parse(text:String): Try[Resultado[T]] = {//: Try[Resultado[List[T]]]
     parser.parse(text) match {
         case Failure(e) => Failure(e)
@@ -213,11 +215,11 @@ case class opt[+T>: None.type](parser: Parser[T]) extends Parser[T] {
 }
 
 //*: la clausura de Kleene se aplica a un parser, convirtiéndolo en otro que se puede aplicar todas las veces que sea posible o 0 veces. El resultado debería ser una lista que contiene todos los valores que hayan sido parseados (podría no haber ninguno).
-case class clausuraDeKleene[+T >: Null](parser: Parser[T]) extends Parser[List[Any]] {
-  def parse(text:String): Try[Resultado[List[Any]]] = {
+case class clausuraDeKleene[+T >: Null](parser: Parser[T]) extends Parser[List[T]] {
+  def parse(text:String): Try[Resultado[List[T]]] = {
     for {
       uno <- opt(parser <> this).parse(text)
-    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
+    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed).asInstanceOf[List[T]])
   }
 }
 //
@@ -249,8 +251,10 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
 }
 
 case object parserEspacios extends Parser[List[Any]] {
-  def parse(text: String): Try[Resultado[List[Any]]] =
-    char(' ').*.parse(text) //Claúsula de kleene con n cantidad de espacios
+  def parse(text: String): Try[Resultado[List[Any]]] = {
+    satisfies(anyChar())(_.isWhitespace).*.parse(text)
+//    (char(' ') <|> char('\n')).*.parse(text)
+  } //Claúsula de kleene con n cantidad de espacios
 }
 
 case class Punto(x: Double, y: Double){
@@ -279,6 +283,15 @@ case class Cuadrado(topLeft: Punto, bottomRight: Punto){
 
   def paaaaaa() = {
     bottomRight.position()
+  }
+}
+
+case class alphaNum() extends Parser[String]{
+  def parse(text: String): Try[Resultado[String]] = {
+    for {
+      result1 <- anyChar().*().parse(text)
+    } yield result1.copy(parsed = result1.parsed.mkString )
+
   }
 }
 
