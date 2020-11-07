@@ -1,4 +1,6 @@
-import scala.runtime.Nothing$
+import scalafx.scene.paint.Color
+import tadp.internal.TADPDrawingAdapter
+
 import scala.util.{Failure, Success, Try}
 
 //println(utilities.aplanandoAndo(List(1,2)))
@@ -6,18 +8,37 @@ import scala.util.{Failure, Success, Try}
 case object utilities {
   val aplanandoAndo: Any => List[Any] = {
     case None => List()
-    case (a,b) => a :: aplanandoAndo(b)
+    case (a,b) => aplanandoAndo(a) ++ aplanandoAndo(b)
     case List(a::b) => a :: aplanandoAndo(b)
     case a::b => a :: aplanandoAndo(b)
     case a if a != Nil => List(a)
     case _ => List()
   }
-  val tuplaDe: (Any, Any) => (Any) = {
-    case (a,None) => (a)
-    case (None, b) => (b)
-    case (a, List(None)) => (a)
-    case (List(None), b) => (b)
-    case loquevenga => (loquevenga)
+
+//  def aplanandoAndoUnitipado[T](algo: (T, List[T])): List[T] = {
+//    algo match {
+//      case (a,List()) => List(a)
+//      case None => List()
+//      case (a,b) => a :: aplanandoAndoUnitipado(b,List(b))
+//      case List(a::b) => a :: aplanandoAndoUnitipado(b)
+//      case a::b => a :: aplanandoAndoUnitipado(b)
+//      case a if a != Nil => List(a)
+//      case _ => List()
+//    }
+//  }
+
+//  val tuplaDe: Product => Product = {
+//    case ((a,b),c) => Tuple3(a,b,c)
+//    case ((a,b,c),d) => Tuple4(a,b,c,d)
+//    case (a,None) => Tuple1(a)
+//    case (None, b) => Tuple1(b)
+//    case (a, List(None)) => Tuple1(a)
+//    case (List(None), b) => Tuple1(b)
+//    case loquevenga => loquevenga
+//  }
+
+  val tuplaDe: Product => List[Any] = {
+    aplanandoAndo(_)
   }
 }
 
@@ -33,7 +54,7 @@ sealed trait Parser[+T]{
     orCombinator(this, other)
   }
 
-  def <>[U](other: Parser[U]): Parser[(Any)] ={
+  def <>[U](other: Parser[U]): Parser[List[Any]] ={
     concatCombinator(this, other)
   }
 
@@ -45,7 +66,21 @@ sealed trait Parser[+T]{
     leftmostCombinator(this, other)
   }
 
-//  def sepBy(sep: Parser[U]): sepByCombinator[T, Any] ={
+  def *(): clausuraDeKleene[Any] = {
+    clausuraDeKleene(this)
+  }
+
+  def +(): clausuraDeKleenePositiva[Any] = {
+    clausuraDeKleenePositiva(this)
+  }
+
+//  def satisfies():
+//  def map[U](mapFunction: T => U): mapCombinator[T,U] = {
+//    mapCombinator(this, mapFunction)
+//  }
+
+
+  //  def sepBy(sep: Parser[U]): sepByCombinator[T, Any] ={
 //    sepByCombinator(this, sep)
 //  }
 
@@ -55,7 +90,7 @@ sealed trait Parser[+T]{
 case class anyChar() extends Parser[Char] {
   def parse(text: String): Try[Resultado[Char]] = {
     Try(text match {
-      case _ if !text.isEmpty => Resultado(text.head, text.tail)
+      case _ if !text.isEmpty && text.head != ' ' => Resultado(text.head, text.tail)
       case _ => throw new ParserErrorException(Resultado(null, text))
     })
   }
@@ -113,8 +148,9 @@ case class orCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) 
   }
 }
 
-case class concatCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) extends Parser[(Any)] {
-  def parse(text:String): Try[Resultado[(Any)]] = { //Try[Resultado[(T,U)]] = {
+//case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[Product] {
+case class concatCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) extends Parser[List[Any]] {
+  def parse(text:String): Try[Resultado[List[Any]]] = {
     for {
       result1 <- parser1.parse(text) // Resultado("hola", "mundo!")
       result2 <- parser2.parse(result1.notParsed)
@@ -165,8 +201,6 @@ case class satisfies[+T](parser: Parser[T], condition: Any => Boolean) extends P
   }
 }
 
-
-
 //TODO: OTRA IDEA ES HACER EL PARSER QUE NO PARSEA NADA (EL FALSO PARSER)
 case class opt[+T>: None.type](parser: Parser[T]) extends Parser[T] {
   def parse(text:String): Try[Resultado[T]] = {//: Try[Resultado[List[T]]]
@@ -186,8 +220,8 @@ case class clausuraDeKleene[+T >: Null](parser: Parser[T]) extends Parser[List[A
     } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
   }
 }
-
-//  +: es como la clausura de Kleene pero requiere que el parser se aplique al menos UNA vez.
+//
+////  +: es como la clausura de Kleene pero requiere que el parser se aplique al menos UNA vez.
 case class clausuraDeKleenePositiva[+T >: Null](parser: Parser[T]) extends Parser[List[Any]] {
   def parse(text:String): Try[Resultado[List[Any]]] = {
     for {
@@ -196,13 +230,15 @@ case class clausuraDeKleenePositiva[+T >: Null](parser: Parser[T]) extends Parse
   }
 }
 
-case class map[T, U](parser: Parser[T], mapFunction: T => U) extends Parser[U] {
+case class mapCombinator[T, U](parser: Parser[T], mapFunction: T => U) extends Parser[U] {
   def parse(text:String): Try[Resultado[U]] = {//: Try[Resultado[List[T]]]
     for{
       result <- parser.parse(text)
     } yield result.copy(parsed = mapFunction(result.parsed))
   }
 }
+
+
 
 case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[List[Any]] {
   def parse(text:String): Try[Resultado[List[Any]]] = {//: Try[Resultado[List[T]]]
@@ -212,140 +248,44 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
   }
 }
 
-//case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[Any] {
-//  def parse(text:String): Try[Resultado[Any]] = {
-//    for {
-//      result <- ((parserContent <~ parserSep) <|> parserContent).parse(text)
-//    } yield result.copy(parsed=List(result.parsed),result.notParsed)
-//  }
-//}
-// sepByCombinator(integer(),char('-')).parse("123-456")
-// integer <~ char(-) (123-456) => parsea 123, y deja en el Result(123,456) en el result.notParsed
-// char(-) (123-456) => xFalla, devuelve el anterior
+case object parserEspacios extends Parser[List[Any]] {
+  def parse(text: String): Try[Resultado[List[Any]]] =
+    char(' ').*.parse(text) //Claúsula de kleene con n cantidad de espacios
+}
 
+case class Punto(x: Any, y: Any)
 
-//case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[Any] {
-//  def parse(text:String): Try[Resultado[Any]] = {
-//    for {
-//      result1 <- parserContent.parse(text)
-//      result2 <- parserSep.parse(result1.notParsed)
-//      } yield result1.copy(parsed = List(result1.parsed, result2.notParsed), "")// notParsed=result2.notParsed
-//  }
-//}
+case object parserPunto extends Parser[Punto] {
+  def parse(text: String): Try[Resultado[Punto]] = {
+    val parserPartes = (double() <~ parserEspacios <~ string("@")) <> (parserEspacios ~> double())
+    parserPartes.parse(text).map(resultado => resultado.parsed match {
+      case List(a,b) => Resultado(Punto(a,b), resultado.notParsed)
+    })
+  }
+}
 
-//implicit class Parser2(parser: Parser) {
-//  def <|>(other: Parser) = (parser, other)
-//}
+case class Cuadrado(topLeft: Punto, bottomRight: Punto){
+  def daleeeeee_pa(): (Punto, Punto) ={
+    (topLeft,bottomRight)
+  }
+}
 
-
+case object parserCuadrado extends Parser[Cuadrado] {
+  def parse(text: String): Try[Resultado[Cuadrado]] = {
+    val parserPartes = string("cuadrado[") ~> (parserPunto <> (char(',') ~> parserPunto) <> (char(',') ~> parserPunto) <> (char(',') ~> parserPunto)) <~ char(']')
+    parserPartes.parse(text).map(resultado => resultado.parsed match {
+      case List(a,b) => Resultado(Cuadrado(a,b), resultado.notParsed)
+    })
+  }
+}
 
 case object pruebitas extends App {
-
-//  def isInt(algo: Any): Boolean = {
-//    algo.getClass.isInstanceOf[Int]
-//  }
-
-  val isString: Any => Boolean = {
-    algo => algo.isInstanceOf[String]//algo.getClass.equals("String".getClass)
-  }
-
-
-//  println("Tests de Parsers individuales")
-//    println("\tChar: ")
-//      print("\t\t1. "); println(char('c').parse("chau")) //Success
-//      print("\t\t2. "); println(char('c').parse("hau"))  //Failure
-//      print("\t\t3. "); println(char('c').parse(""))  //Failure
-//    println("\tAnyChar: ")
-//      print("\t\t1. "); println(anyChar().parse("hola")) //Success
-//      print("\t\t2. "); println(anyChar().parse("")) //Failure
-//    println("\tDigit: ")
-//      print("\t\t1. "); println(digit().parse("12asdf")) //Success
-//      print("\t\t2. "); println(digit().parse("a123")) //Failure
-//      print("\t\t3. "); println(digit().parse("327589")) //Success
-//      print("\t\t4. "); println(digit().parse("4")) //Success
-//    println("\tString: ")
-//      print("\t\t1. "); println(string("hola").parse("hola mundo!")) //Success
-//      print("\t\t2. "); println(string("hola").parse("holgado mundo!")) //Failure
-//    println("\tInteger: ")
-//      print("\t\t1. "); println(integer().parse("-")) //Failure
-//      print("\t\t1. "); println(integer().parse("hau")) //Failure
-//      print("\t\t2. "); println(integer().parse("123.asd")) //Success
-//      print("\t\t3. "); println(integer().parse("123-456")) //Success
-//      print("\t\t4. "); println(integer().parse("-43534543")) //Success
-//    println("\tDouble: ")
-//      print("\t\t1. "); println(double().parse("hau")) //Failure
-//      print("\t\t2. "); println(double().parse("123.asd")) //Success
-//      print("\t\t3. "); println(double().parse("-4353.4543")) //Success
-//  println("")
-//  println("Tests de Parsers Combinators")
-//    println("\tOR combinator: ")
-//      print("\t\t1. "); println((char('c') <|> char('o')).parse("cola")) //Parsea con el primero
-//      print("\t\t2. "); println((char('c') <|> char('h')).parse("hau")) //Parsea con el segundo
-//      print("\t\t3. "); println(orCombinator(char('c'), char('h')).parse("hau")) //Parsea con el segundo
-//      print("\t\t4. "); println(orCombinator(char('c'), char('h')).parse("cau")) //Parsea con el primero
-//      print("\t\t5. "); println(orCombinator(char('c'), char('h')).parse("au")) //Falla
-  println("\tConcat combinator: ")
-      print("\t\t1. "); println((string("hola") <> string("mundo")).parse("holamundo")) //Parsea el primero y el segundo
-      print("\t\t1. "); println((string("hola") <> string("chau")).parse("holamundo")) //Falla: Parsea el primero y no el segundo
-      print("\t\t1. "); println((string("caca") <> string("mundo")).parse("holamundo")) //Falla: No parsea el primero
-      print("\t\t1. "); println((opt(string("caca")) <> string("hola")).parse("holamundo")) //Falla: No parsea el primero
-
-  //  println("\tRightmost combinator: ")
-//    print("\t\t1. "); println((string("hola") ~> string("mundo")).parse("holamundo")) //Funciona, devuelve el de la derecha
-//    print("\t\t2. "); println((string("caca") ~> string("mundo")).parse("holamundo")) //Falla: no parsea el de la izquierda
-//    print("\t\t3. "); println((string("hola") ~> string("mudo")).parse("holamundo")) //Falla: no parsea el de la derecha
-//  println("\tLeftmost combinator: ")
-//    print("\t\t1. "); println((string("hola") <~ string("mundo")).parse("holamundo")) //Funciona, devuelve el de la derecha
-//    print("\t\t2. "); println((string("caca") <~ string("mundo")).parse("holamundo")) //Falla: no parsea el de la izquierda
-//    print("\t\t3. "); println((string("hola") <~ string("mudo")).parse("holamundo")) //Falla: no parsea el de la derecha
-//  println("\tSeparated-by combinator: ")
-//    print("\t\t1. "); println(sepByCombinator(integer(),char('-')).parse("123-abc"))
-//    print("\t\t2. "); println(sepByCombinator(integer(),char('-')).parse(""))
-//    print("\t\t3. "); println(sepByCombinator(integer(),char('-')).parse("123"))
-//    print("\t\t4. "); println(sepByCombinator(integer(),char('-')).parse("123-456"))
-//    print("\t\t5. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789"))
-//    print("\t\t6. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-000"))
-//    print("\t\t7. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-aaa"))
-//    print("\t\t8. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-"))
-//    print("\t\t9. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789--"))
-//    print("\t\t10. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-789-95"))
-//    print("\t\t10. "); println(sepByCombinator(integer(),char('-')).parse("123-456-789-789-95---1--2--0-0-0-0-0-0-"))
-//  println("\tSatisfies combinator: ")
-//  print("\t\t1. "); println(satisfies(string("hola"), isString).parse("hola mundo!"))
-//  print("\t\t2. "); println(satisfies(anyChar(), isString).parse("hola mundo!"))
-//  print("\t\t3. "); println(satisfies(string("hola"), isString).parse("hol mundo!"))
-//  println("\tOpt combinator: ")
-//  print("\t\t1. "); println(opt(satisfies(string("hola"), isString)).parse("hola mundo!"))
-//  print("\t\t2. "); println(opt(satisfies(anyChar(), isString)).parse("hola mundo!"))
-//  println("\tMap combinator: ")
-//  print("\t\t1. "); println(map(integer(), (x:Int) => x * x).parse("12 mundo!"))
-//  print("\t\t2. "); println(map(integer(), (x:Int) => x * x).parse("hola mundo!"))
-  println("\tClausura de Kleene combinator: ")
-  print("\t\t1. "); println(clausuraDeKleene(anyChar()).parse("12 mundo!"))
-  print("\t\t2. "); println(clausuraDeKleene(string("hola")).parse("holaholahola mundo!"))
-  print("\t\t3. "); println(clausuraDeKleene(string("hola")).parse("chau mundo!"))
-  println("\tClausura de Kleene Positiva combinator: ")
-  print("\t\t1. "); println(clausuraDeKleenePositiva(anyChar()).parse("12 mundo!"))
-  print("\t\t2. "); println(clausuraDeKleenePositiva(string("hola")).parse("holaholahola mundo!"))
-  print("\t\t3. "); println(clausuraDeKleenePositiva(string("hola")).parse("chau mundo!"))
-
-
-//  case class Persona(nombre: String, apellido: String)
-//  val personaParser = (alphaNum.* <> (char(' ') ~> alphaNum.*))
-//    .map { case (nombre, apellido) => Persona(nombre, apellido) }
-
-
-  //  print(((23, "foo"), (), (true, 2.0)) flatMap identity)
-//  println(utilities.aplanandoAndo((1,(2,3))))
-//  println(utilities.aplanandoAndo((1,(2,(2,(2,(2,3)))))))
-
-//  println(f.productIterator.)
-//  f.productIterator.flatMap(identity(f))
-//  f.productIterator.foldLeft(List(), v => v.)
-  //  type Magic[+A, +B] = Either[A, B]
-//  val magic: Magic[String,Int] = "Try(Resultado)"
-//
-////  val l: Either[String, Int] = "String"
-//  val l: Either[String, Int] = "a"
+  println(parserCuadrado.parse("cuadrado[0 @ 100,200 @ 300]"))
+  TADPDrawingAdapter
+    .forScreen { adapter =>
+      adapter
+        .beginColor(Color.rgb(100, 100, 100))
+        .rectangle(parserCuadrado.parse("cuadrado[0 @ 100,200 @ 300]").get.parsed.daleeeeee_pa())
+        .end()
+    }
 }
-//case object Digit extends Parser
