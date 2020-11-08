@@ -13,31 +13,31 @@ object CasiTests extends App {
 
     println("Tests de Parsers individuales")
       println("\tChar: ")
-        print("\t\t1. "); println(char('c').parse("chau")) //Success
-        print("\t\t2. "); println(char('c').parse("hau"))  //Failure
-        print("\t\t3. "); println(char('c').parse(""))  //Failure
+        //print("\t\t1. "); println(char('c').parse("chau")) //Success
+        //print("\t\t2. "); println(char('c').parse("hau"))  //Failure
+        //print("\t\t3. "); println(char('c').parse(""))  //Failure
       println("\tAnyChar: ")
-        print("\t\t1. "); println(anyChar().parse("hola")) //Success
-        print("\t\t2. "); println(anyChar().parse("")) //Failure
+//        print("\t\t1. "); println(anyChar().parse("hola")) //Success
+//        print("\t\t2. "); println(anyChar().parse("")) //Failure
       println("\tDigit: ")
-        print("\t\t1. "); println(digit().parse("12asdf")) //Success
-        print("\t\t2. "); println(digit().parse("a123")) //Failure
-        print("\t\t3. "); println(digit().parse("327589")) //Success
-        print("\t\t4. "); println(digit().parse("4")) //Success
+//        print("\t\t1. "); println(digit().parse("12asdf")) //Success
+//        print("\t\t2. "); println(digit().parse("a123")) //Failure
+//        print("\t\t3. "); println(digit().parse("327589")) //Success
+//        print("\t\t4. "); println(digit().parse("4")) //Success
       println("\tString: ")
-        print("\t\t1. "); println(string("hola").parse("hola mundo!")) //Success
-        print("\t\t2. "); println(string("hola").parse("holgado mundo!")) //Failure
+//        print("\t\t1. "); println(string("hola").parse("hola mundo!")) //Success
+//        print("\t\t2. "); println(string("hola").parse("holgado mundo!")) //Failure
       println("\tInteger: ")
-        print("\t\t1. "); println(integer().parse("-")) //Failure
-        print("\t\t1. "); println(integer().parse("hau")) //Failure
-        print("\t\t2. "); println(integer().parse("123.asd")) //Success
-        print("\t\t3. "); println(integer().parse("123-456")) //Success
-        print("\t\t4. "); println(integer().parse("-43534543")) //Success
+//        print("\t\t1. "); println(integer().parse("-")) //Failure
+//        print("\t\t1. "); println(integer().parse("hau")) //Failure
+//        print("\t\t2. "); println(integer().parse("123.asd")) //Success
+//        print("\t\t3. "); println(integer().parse("123-456")) //Success
+//        print("\t\t4. "); println(integer().parse("-43534543")) //Success
       println("\tDouble: ")
-        print("\t\t1. "); println(double().parse("hau")) //Failure
-        print("\t\t2. "); println(double().parse("123.asd")) //Success
-        print("\t\t3. "); println(double().parse("-4353.4543")) //Success
-    println("")
+//        print("\t\t1. "); println(double().parse("hau")) //Failure
+//        print("\t\t2. "); println(double().parse("123.asd")) //Success
+//        print("\t\t3. "); println(double().parse("-4353.4543")) //Success
+//    println("")
     println("Tests de Parsers Combinators")
       println("\tOR combinator: ")
         print("\t\t1. "); println((char('c') <|> char('o')).parse("cola")) //Parsea con el primero
