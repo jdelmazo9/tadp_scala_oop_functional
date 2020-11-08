@@ -48,5 +48,5 @@ libraryDependencies ++= javaFXModules.map(m =>
   "org.openjfx" % s"javafx-$m" % "14.0.1" classifier osName
 )
 
-// Fork a new JVM for 'run' and 'test:run', to avoid JavaFX double initialization problems
+// Fork a new JVM for 'run' and 'test:run', to avoid JavaFX parser.double initialization problems
 fork := true

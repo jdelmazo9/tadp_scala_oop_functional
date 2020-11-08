@@ -1,44 +1,46 @@
-import Dibujante.dibujar
-import scalafx.scene.paint.Color
-import tadp.{ParserErrorException, Punto, Resultado, utilities}
-import tadp.internal.TADPDrawingAdapter
-import tree.{Colorete, Cuadrado, Grupo}
+package parser
+
+import tadp.{ParserErrorException, Resultado, utilities}
 
 import scala.util.{Failure, Success, Try}
 
-sealed trait Parser[+T]{
-  def <|>[U<:W, W>:T](other: Parser[U]): orCombinator[W, T, U] ={
+abstract class Parser[+T]{
+  def <|>[U<:W, W>:T](other: Parser[U]): Parser[W] ={ //: orCombinator[W, T, U]
     orCombinator[W,T,U](this, other)
   }
 
-  def <>[U<:W, W>:T](other: Parser[U]): concatCombinator[W,T,U] ={
+  def <>[U<:W, W>:T](other: Parser[U]): Parser[List[W]] ={ //: concatCombinator[W,T,U]
     concatCombinator[W,T,U](this, other)
   }
 
-  def ~>[U](other: Parser[U]): rightmostCombinator[T, U] ={
+  def ~>[U](other: Parser[U]): Parser[U] ={
     rightmostCombinator(this, other)
   }
 
-  def <~[U](other: Parser[U]): leftmostCombinator[T, U] ={
+//  def ~>[U](other: Parser[U]): rightmostCombinator[T, U] ={
+//    rightmostCombinator(this, other)
+//  }
+
+  def <~[U](other: Parser[U]): Parser[T] ={ //: leftmostCombinator[T, U]
     leftmostCombinator(this, other)
   }
 
-  def *(): clausuraDeKleene[T] = {
+  def *(): Parser[List[T]] = {
     clausuraDeKleene[T](this)
   }
 
-  def +(): clausuraDeKleenePositiva[T] = {
+  def +(): Parser[List[T]] = {
     clausuraDeKleenePositiva[T](this)
   }
 
-//  def satisfies():
-//  def map[U](mapFunction: T => U): mapCombinator[T,U] = {
-//    mapCombinator(this)(mapFunction)
+//  def parser.satisfies():
+//  def map[U](mapFunction: T => U): parser.mapCombinator[T,U] = {
+//    parser.mapCombinator(this)(mapFunction)
 //  }
 
 
-  //  def sepBy(sep: Parser[U]): sepByCombinator[T, Any] ={
-//    sepByCombinator(this, sep)
+  //  def sepBy(sep: parser.Parser[U]): parser.sepByCombinator[T, Any] ={
+//    parser.sepByCombinator(this, sep)
 //  }
 
   def parse(text: String): Try[Resultado[T]]
@@ -105,13 +107,13 @@ case class orCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) 
   }
 }
 // 1? <> 5*
-//case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[Product] {
+//case class parser.concatCombinator[+W,+T<:W,+U<:W](parser1: parser.Parser[T], parser2: parser.Parser[U]) extends parser.Parser[Product] {
 case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[List[W]] {
   def parse(text:String): Try[Resultado[List[W]]] = {
     for {
       result1 <- parser1.parse(text) // tadp.Resultado("hola", "mundo!")
       result2 <- parser2.parse(result1.notParsed)
-    } yield result2.copy(parsed = utilities.aplanandoAndo(result1.parsed, result2.parsed))
+    } yield result2.copy(parsed = utilities.aplanandoAndo[W](result1.parsed, result2.parsed))
   }
 }
 
@@ -134,7 +136,7 @@ case class leftmostCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) ext
 }
 
 //123-456
-//val numeroDeTelefono "123-456" = integer.sepBy(char('-'))("123-456")
+//val numeroDeTelefono "123-456" = parser.integer.sepBy(parser.char('-'))("123-456")
 
 
 // 123                  Cont
@@ -174,7 +176,7 @@ case class clausuraDeKleene[+T](parser: Parser[T]) extends Parser[List[T]] {
   def parse(text:String): Try[Resultado[List[T]]] = {
     for {
       uno <- opt(parser <> this).parse(text)
-    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
+    } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
   }
 }
 //
@@ -183,7 +185,7 @@ case class clausuraDeKleenePositiva[+T](parser: Parser[T]) extends Parser[List[T
   def parse(text:String): Try[Resultado[List[T]]] = {
     for {
       uno <- (parser <> clausuraDeKleene(parser)).parse(text)
-    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
+    } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
   }
 }
 
@@ -199,28 +201,9 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
   def parse(text:String): Try[Resultado[List[T]]] = {//: Try[tadp.Resultado[List[T]]]
     for {
       uno <- ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
-    } yield uno.copy(parsed = utilities.aplanandoAndo(uno.parsed))
+    } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
   }
 }
-
-case object parserEspacios extends Parser[List[Char]] {
-  def parse(text: String): Try[Resultado[List[Char]]] = {
-//    (satisfies(anyChar())(_.isWhitespace)).*.parse(text)
-    (char(' ') <|> char('\n') <|> char('\t')).*.parse(text)
-  } //Claúsula de kleene con n cantidad de espacios
-}
-
-
-
-case object parserPunto extends Parser[Punto] {
-  def parse(text: String): Try[Resultado[Punto]] = {
-    val parserPartes = (double() <~ parserEspacios <~ string("@")) <> (parserEspacios ~> double())
-    parserPartes.parse(text).map(resultado => resultado.parsed match {
-      case List(a,b) => Resultado(Punto(a,b), resultado.notParsed)
-    })
-  }
-}
-
 
 case class alphaNum() extends Parser[String]{
   def parse(text: String): Try[Resultado[String]] = {
@@ -231,18 +214,11 @@ case class alphaNum() extends Parser[String]{
   }
 }
 
-case object parserCuadrado extends Parser[Cuadrado] {
-  def parse(text: String): Try[Resultado[Cuadrado]] = {
-    val parserPartes = string("cuadrado[") ~> (parserPunto <> (char(',') ~> parserPunto)) <~ char(']')
-    parserPartes.parse(text).map(resultado => resultado.parsed match {
-      case List(a,b) => Resultado(Cuadrado(a,b), resultado.notParsed)
-    })
-  }
-}
 
-//case object parserColor extends Parser[Colorete] {
+
+//case object parserColor extends parser.Parser[Colorete] {
 //  def parse(text: String): Try[Resultado[Colorete]] = {
-//    val parserPartes = string("color[") ~> (integer() <> (char(',') ~> integer()) <> (char(',') ~> integer()) ) <~ char(']')
+//    val parserPartes = parser.string("color[") ~> (parser.integer() <> (parser.char(',') ~> parser.integer()) <> (parser.char(',') ~> parser.integer()) ) <~ parser.char(']')
 //    parserPartes.parse(text).map(resultado => resultado.parsed match {
 //      case List(a,b) => Resultado(Cuadrado(a,b), resultado.notParsed)
 //    })

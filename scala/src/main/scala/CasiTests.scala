@@ -1,3 +1,5 @@
+import parser.{anyChar, char, clausuraDeKleene, clausuraDeKleenePositiva, digit, double, integer, mapCombinator, opt, orCombinator, parserEspacios, parserPunto, satisfies, sepByCombinator, string}
+
 import scala.util.Try
 
 object CasiTests extends App {
@@ -47,7 +49,7 @@ object CasiTests extends App {
         print("\t\t5. "); println(orCombinator(char('c'), char('h')).parse("au")) //Falla
   println("\tConcat combinator: ")
   print("\t\t1. ");
-//  println(concatCombinator(string("hola"), string("mundo")).parse("holamundo")) //Parsea el primero y el segundo
+//  println(parser.concatCombinator(parser.string("hola"), parser.string("mundo")).parse("holamundo")) //Parsea el primero y el segundo
   println((string("hola") <> string("mundo")).parse("holamundo")) //Parsea el primero y el segundo
   print("\t\t1. ");
   println((string("hola") <> string("chau")).parse("holamundo")) //Falla: Parsea el primero y no el segundo
@@ -114,12 +116,12 @@ object CasiTests extends App {
     println(parserPunto.parse("0 @ 10"))
 //
 //
-//    println(parserPunto.parse("1 @ 2"))
+//    println(parser.parserPunto.parse("1 @ 2"))
 //
-//      println(alphaNum().parse("Sergi Roberti"))
-//      println((alphaNum() <> (char(' ') ~> alphaNum())).parse("Sergi Roberti"))
+//      println(parser.alphaNum().parse("Sergi Roberti"))
+//      println((parser.alphaNum() <> (parser.char(' ') ~> parser.alphaNum())).parse("Sergi Roberti"))
 //      case class Persona(nombre: Any, apellido: Any)
-//      val personaParser = mapCombinator(alphaNum() <> (char(' ') ~> alphaNum()),
+//      val personaParser = parser.mapCombinator(parser.alphaNum() <> (parser.char(' ') ~> parser.alphaNum()),
 //        (resultado: Any) => {resultado match{ case List(nombre, apellido) => Persona(nombre, apellido) }})
 
 //      println(personaParser.parse("Sergi Roberti"))

@@ -4,7 +4,7 @@
 ////ENTIDADES QUE NO DUDAMOS QUE TIENEN QUE ESTAR: PARSER{<TEXTO = {ARBOL}>} (estructura facil de leer)
 ////PARSER COMBINATOR (PARSER->PARSER->PARSER)
 //
-////case class Parser(a: String) {
+////case class parser.Parser(a: String) {
 ////  require(a < Micro.REGISTER_SIZE && a > -Micro.REGISTER_SIZE)
 ////  require(b < Micro.REGISTER_SIZE && b > -Micro.REGISTER_SIZE)
 ////  require(mem.size == Micro.MEM_SIZE)
@@ -18,7 +18,7 @@
 //
 //case object main extends App {
 //
-//  def anyChar: Function1[String, Any] = {
+//  def parser.anyChar: Function1[String, Any] = {
 //    val f = (text: String) => Try(
 //      text match {
 //        case t if !t.isEmpty => tadp.Resultado(text.head, text.tail)
@@ -29,7 +29,7 @@
 //  }
 //  // val f = (text: String) => Try(tadp.Resultado(text.head, text.tail))
 //
-//  def char(character: Char): PartialFunction[String, Try[tadp.Resultado]] = {
+//  def parser.char(character: Char): PartialFunction[String, Try[tadp.Resultado]] = {
 //    val f: PartialFunction[String, Try[tadp.Resultado]] = {
 //      case text if text.head == character => Try(tadp.Resultado(text.head, text.tail))
 //    }
@@ -46,27 +46,27 @@
 ////    f
 //  }
 //
-//  def digit: Function1[String, Any] = {
+//  def parser.digit: Function1[String, Any] = {
 //    val f = (text: String) => if (text.head.isDigit) text.head
 //    f
 //  }
 //
-//  def string(aString: String): Function1[String, Any] = {
+//  def parser.string(aString: String): Function1[String, Any] = {
 //    val f = (text: String) => if (text.startsWith(aString)) aString
 //    f
 //  }
 //
-//  def integer: Function1[String, Any] = {
+//  def parser.integer: Function1[String, Any] = {
 //    val f = (text: String) => if ("\\-?\\d+".r.pattern.matcher(text).matches()) text.toInt
 //    f
 //  }
 //
-//  def double: Function1[String, Any] = {
+//  def parser.double: Function1[String, Any] = {
 //    val f = (text: String) => if ("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) text.toDouble
 //    f
 //  }
 //
-//  // orCombinator([])
+//  // parser.orCombinator([])
 //
 ////  def orCombinator2(p1:PartialFunction[String, Try[tadp.Resultado]], p2:PartialFunction[String, Try[tadp.Resultado]]): PartialFunction[String, Try[tadp.Resultado]] = {
 ////    val parsers: List[PartialFunction[String, Try[tadp.Resultado]]] = List(p1,p2)
@@ -79,7 +79,7 @@
 ////    }
 ////  }
 //
-//    def orCombinator(p1:PartialFunction[String, Try[tadp.Resultado]], p2:PartialFunction[String, Try[tadp.Resultado]]): PartialFunction[String, Try[tadp.Resultado]] = {
+//    def parser.orCombinator(p1:PartialFunction[String, Try[tadp.Resultado]], p2:PartialFunction[String, Try[tadp.Resultado]]): PartialFunction[String, Try[tadp.Resultado]] = {
 //    val f: PartialFunction[String, Try[tadp.Resultado]] = {
 //      case text if p1(text).isSuccess => p1(text)
 //      case text if p2(text).isSuccess => p2(text)
@@ -89,25 +89,25 @@
 //  }
 //
 ////  print("aaaaaaa")
-////  print(anyChar("hola"))
-////  print(anyChar(""))
-////  val parser_c = char('c')
-////  val parser_h = char('h')
+////  print(parser.anyChar("hola"))
+////  print(parser.anyChar(""))
+////  val parser_c = parser.char('c')
+////  val parser_h = parser.char('h')
 //
 ////  val samples :List[String] = List("au")
 ////
-////  val algo = samples map (char('h') orElse char('c'))
-//  print(orCombinator(char('h'), char('c'))("cau"))
+////  val algo = samples map (parser.char('h') orElse parser.char('c'))
+//  print(parser.orCombinator(parser.char('h'), parser.char('c'))("cau"))
 //
 //}
-////  def integer: Function1[String, Any] = {
+////  def parser.integer: Function1[String, Any] = {
 ////    val f: PartialFunction [String, Any] = {
 ////      case text if ("\\-?\\d+".r.pattern.matcher(text).matches()) => text.toInt
 ////    }
 ////    f
 ////  }
 ////
-////  def double: Function1[String, Any] = {
+////  def parser.double: Function1[String, Any] = {
 ////    val f: PartialFunction [String, Any] = {
 ////      case text if ("\\-?\\d+(\\.\\d+)?".r.pattern.matcher(text).matches()) => text.toDouble
 ////    }
@@ -118,7 +118,7 @@
 ////    case (caracter, cadena) if caracter == cadena.head => caracter
 ////  } ;
 //
-////  val concatenate = integer compose double
+////  val concatenate = parser.integer compose parser.double
 //
 //
 ////  print(concatenate)

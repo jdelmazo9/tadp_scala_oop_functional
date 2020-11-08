@@ -1,6 +1,7 @@
 //package tadp
 
 import org.scalatest.funspec.AnyFunSpec
+import parser._
 import tadp.{ParserErrorException, Resultado}
 
 import scala.util.{Failure, Success}
@@ -42,9 +43,9 @@ class ParsersScpec extends AnyFunSpec {
         }
       }
     }
-    describe("digit:"){
+    describe("digit:") {
       it("Success digit().parse(\"4\")") {
-        assert(digit().parse("4") == Success(Resultado('4',"")))
+        assert(digit().parse("4") == Success(Resultado('4', "")))
       }
       it("Success digit().parse(\"12asdf\")") {
         assert(digit().parse("12asdf") == Success(Resultado('1', "2asdf")))
@@ -59,9 +60,9 @@ class ParsersScpec extends AnyFunSpec {
         }
       }
     }
-    describe("string:"){
+    describe("string:") {
       it("Success string(\"hola\").parse(\"hola mundo!\")") {
-        assert(string("hola").parse("hola mundo!") == Success(Resultado("hola"," mundo!")))
+        assert(string("hola").parse("hola mundo!") == Success(Resultado("hola", " mundo!")))
       }
       it("Failure string(\"hola\").parse(\"holgado mundo!\")") {
         assert(string("hola").parse("holgado mundo!").isFailure)
@@ -72,13 +73,13 @@ class ParsersScpec extends AnyFunSpec {
     }
     describe("integer:") {
       it("Success integer().parse(\"-43534543\")") {
-        assert(integer().parse("-43534543") === Success(Resultado(-43534543,"")))
+        assert(integer().parse("-43534543") === Success(Resultado(-43534543, "")))
       }
       it("Success integer().parse(\"123-456\")") {
-        assert(integer().parse("123-456") == Success(Resultado(123,"-456")))
+        assert(integer().parse("123-456") == Success(Resultado(123, "-456")))
       }
       it("Success integer().parse(\"123.asd\")") {
-        assert(integer().parse("123.asd") == Success(Resultado(123,".asd")))
+        assert(integer().parse("123.asd") == Success(Resultado(123, ".asd")))
       }
       it("Failure integer().parse(\"hau\")") {
         assert(integer().parse("hau").isFailure)
@@ -95,10 +96,10 @@ class ParsersScpec extends AnyFunSpec {
     }
     describe("double: ") {
       it("Success double().parse(\"-4353.4543\")") {
-        assert( double().parse("-4353.4543") == Success(Resultado(-4353.4543,"")))
+        assert(double().parse("-4353.4543") == Success(Resultado(-4353.4543, "")))
       }
       it("Success double().parse(\"123.asd\")") {
-        assert( double().parse("123.asd") == Success(Resultado(123.0,".asd")))
+        assert(double().parse("123.asd") == Success(Resultado(123.0, ".asd")))
       }
       it("Failure double().parse(\"hau\")") {
         assert(double().parse("hau").isFailure)
@@ -108,69 +109,61 @@ class ParsersScpec extends AnyFunSpec {
       }
     }
 
-  describe("Parser Combinators") {
-    describe("<|> combinator:") {
-      it("Success (char('c') <|> char('o')).parse(\"cola\")"){
-        (char('c') <|> char('o')).parse("cola")
-      }
-      it("Success "){
-        (char('c') <|> char('h')).parse("hau")
-      }
-      it("Success "){
-        orCombinator(char('c'), char('h')).parse("hau")
-      }
-      it("Success "){
-        orCombinator(char('c'), char('h')).parse("cau")
-      }
-      it("Failure "){
-        orCombinator(char('c'), char('h')).parse("au")
-      }
-//      print("\t\t1. "); println((char('c') <|> char('o')).parse("cola")) //Parsea con el primero
-//      print("\t\t2. "); println((char('c') <|> char('h')).parse("hau")) //Parsea con el segundo
-//      print("\t\t3. "); println(orCombinator(char('c'), char('h')).parse("hau")) //Parsea con el segundo
-//      print("\t\t4. "); println(orCombinator(char('c'), char('h')).parse("cau")) //Parsea con el primero
-//      print("\t\t5. "); println(orCombinator(char('c'), char('h')).parse("au")) //Falla
-    }
-    describe("<> combinator:") {
-
-    }
-    describe("~> combinator:") {
-
-    }
-    describe("<~ combinator:") {
-
-    }
-    describe("separetedBy combinator:") {
-
-    }
-    describe("satifies combinator:") {
-
-    }
-    describe("opt combinator:") {
-
-    }
-    describe("map combinator:") {
-
-    }
-    describe("clausura de Kleene *:") {
-
-    }
-    describe("clausura de Kleene +:") {
-
-    }
-
-
-
+//    describe("Parser Combinators") {
+//      describe("<|> combinator:") {
+//        it("Success (char('c') <|> char('o')).parse(\"cola\")") {
+//          (char('c') <|> char('o')).parse("cola")
+//        }
+//        it("Success ") {
+//          (char('c') <|> char('h')).parse("hau")
+//        }
+//        it("Success ") {
+//          orCombinator(char('c'), char('h')).parse("hau")
+//        }
+//        it("Success ") {
+//          orCombinator(char('c'), char('h')).parse("cau")
+//        }
+//        it("Failure ") {
+//          orCombinator(char('c'), char('h')).parse("au")
+//        }
+//        //      print("\t\t1. "); println((char('c') <|> char('o')).parse("cola")) //Parsea con el primero
+//        //      print("\t\t2. "); println((char('c') <|> char('h')).parse("hau")) //Parsea con el segundo
+//        //      print("\t\t3. "); println(orCombinator(char('c'), char('h')).parse("hau")) //Parsea con el segundo
+//        //      print("\t\t4. "); println(orCombinator(char('c'), char('h')).parse("cau")) //Parsea con el primero
+//        //      print("\t\t5. "); println(orCombinator(char('c'), char('h')).parse("au")) //Falla
+//      }
+//      //    describe("<> combinator:") {
+//      //
+//      //    }
+//      //    describe("~> combinator:") {
+//      //
+//      //    }
+//      //    describe("<~ combinator:") {
+//      //
+//      //    }
+//      //    describe("separetedBy combinator:") {
+//      //
+//      //    }
+//      //    describe("satifies combinator:") {
+//      //
+//      //    }
+//      //    describe("opt combinator:") {
+//      //
+//      //    }
+//      //    describe("map combinator:") {
+//      //
+//      //    }
+//      //    describe("clausura de Kleene *:") {
+//      //
+//      //    }
+//      //    describe("clausura de Kleene +:") {
+//      //
+//      //    }
+//
+//
+//    }
 
 
   }
-
-  }
-
-
-
-
-
-
 
 }
