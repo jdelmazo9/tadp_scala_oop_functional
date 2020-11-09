@@ -1,5 +1,5 @@
 package parser
-import Dibujante.dibujar
+import Dibujante._
 import scalafx.scene.paint.Color
 import tadp.internal.TADPDrawingAdapter
 import tadp.{Punto, Resultado}
@@ -186,7 +186,7 @@ package object DrawParsers {
   def parseAndDraw(text: String): Unit = {
     TADPDrawingAdapter
       .forScreen { adapter =>
-        dibujar(parse(text), adapter)
+        dibujar(simplificar(parse(text)), adapter)
       }
   }
 }
