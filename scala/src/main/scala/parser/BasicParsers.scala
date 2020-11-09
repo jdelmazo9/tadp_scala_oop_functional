@@ -108,6 +108,8 @@ case class orCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) 
 }
 // 1? <> 5*
 //case class parser.concatCombinator[+W,+T<:W,+U<:W](parser1: parser.Parser[T], parser2: parser.Parser[U]) extends parser.Parser[Product] {
+// Punto <> Punto => List(p1,p2)
+// List(Punto, Punto) <> Punto
 case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[List[W]] {
   def parse(text:String): Try[Resultado[List[W]]] = {
     for {
@@ -148,7 +150,10 @@ case class leftmostCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) ext
 //CHECK DEL ANY PARA LA FUNCION CONDITION => TODO: Debería ser T y tira varianza y contravarianza
 case class satisfies[T](parser: Parser[T])(condition: T => Boolean) extends Parser[T] {
   def parse(text:String): Try[Resultado[T]] = {//: Try[tadp.Resultado[List[T]]]
-    parser.parse(text) match {
+//    println("satisfies. quieren que parse: "+text)
+//    println("satisfies. quieren que parse con: "+condition)
+    val p2 = parser.parse(text)
+    p2 match {
         case Failure(e) => Failure(e)
         case success if condition(success.get.parsed) => success
         case _ => Try(throw new ParserErrorException(Resultado(null, text)))
@@ -174,9 +179,15 @@ case class opt[+T>: None.type](parser: Parser[T]) extends Parser[T] {
 //*: la clausura de Kleene se aplica a un parser, convirtiéndolo en otro que se puede aplicar todas las veces que sea posible o 0 veces. El resultado debería ser una lista que contiene todos los valores que hayan sido parseados (podría no haber ninguno).
 case class clausuraDeKleene[+T](parser: Parser[T]) extends Parser[List[T]] {
   def parse(text:String): Try[Resultado[List[T]]] = {
+//    var aux = parser.parse(text)
+//    var res = aux.get
+//    while (aux.isSuccess){
+//
+//    }
     for {
       uno <- opt(parser <> this).parse(text)
     } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
+//    } yield uno.copy(parsed = uno.parsed.asInstanceOf[List[T]])
   }
 }
 //
@@ -199,6 +210,18 @@ case class mapCombinator[T, U](parser: Parser[T])(mapFunction: T => U) extends P
 
 case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[List[T]] {
   def parse(text:String): Try[Resultado[List[T]]] = {//: Try[tadp.Resultado[List[T]]]
+//    println("sepby quieren que parsee: " + text)
+    val p1 = parserContent.parse(text)
+    if(p1.isFailure){
+      return Failure(new ParserErrorException[List[T]](Resultado(parsed = List(), notParsed = text)))
+    }
+    val sep = parserSep.parse(p1.get.notParsed)
+    if(sep.isFailure){
+      return Try(p1.get.copy(parsed = utilities.aplanandoAndo[T](p1.get.parsed)))
+    }
+    val larecur = this.parse(sep.get.notParsed)
+    return Try(p1.get.copy(parsed = utilities.aplanandoAndo(p1.get.parsed, larecur.get.parsed), notParsed = larecur.get.notParsed))
+
     for {
       uno <- ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
     } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
@@ -209,8 +232,7 @@ case class alphaNum() extends Parser[String]{
   def parse(text: String): Try[Resultado[String]] = {
     for {
       result1 <- anyChar().*().parse(text)
-    } yield result1.copy(parsed = result1.parsed.mkString )
-
+    } yield result1.copy(parsed = result1.parsed.mkString)
   }
 }
 

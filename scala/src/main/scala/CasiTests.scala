@@ -65,6 +65,8 @@ object CasiTests extends App {
   print("\t\t1. ");
   println((string("caca") <> string("mundo")).parse("holamundo")) //Falla: No parsea el primero
   print("\t\t1. ");
+  println((string("hola") <> string("mundo") <> string("mundo")).parse("holamundomundo")) //Falla: No parsea el primero
+  print("\t\t1. ");
   println((opt(string("caca")) <> string("hola")).parse("holamundo")) //Falla: No parsea el primero
 
     println("\tRightmost combinator: ")
