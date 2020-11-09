@@ -1,6 +1,6 @@
 package parser
 
-import tadp.{ParserErrorException, Resultado, utilities}
+import tadp.{ParserErrorException, Resultado, contador, utilities}
 
 import scala.util.{Failure, Success, Try}
 
@@ -77,7 +77,13 @@ case class digit() extends Parser[Char] {
 case class string(string: String) extends Parser[String] {
   def parse(text: String): Try[Resultado[String]] = {
     Try(text match {
-      case _ if text.startsWith(string) => Resultado(string, text.substring(string.length))
+      case _ if text.startsWith(string) => {
+        contador.inc_id(string)
+//        if(string == "rectangulo") {
+//          println("Recangulo parseado en: " + text)
+//        }
+        Resultado(string, text.substring(string.length))
+      }
       case _ => throw new ParserErrorException(Resultado(null, text))
     })
   }
@@ -103,7 +109,8 @@ case class double() extends Parser[Double] {
 
 case class orCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[W]{
   def parse(text: String): Try[Resultado[W]] = {
-    if (parser1.parse(text).isSuccess) parser1.parse(text) else parser2.parse(text)
+    val p1 = parser1.parse(text)
+    if (p1.isSuccess) p1 else parser2.parse(text)
   }
 }
 // 1? <> 5*
@@ -222,9 +229,15 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
     val larecur = this.parse(sep.get.notParsed)
     return Try(p1.get.copy(parsed = utilities.aplanandoAndo(p1.get.parsed, larecur.get.parsed), notParsed = larecur.get.notParsed))
 
-    for {
-      uno <- ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
-    } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
+//    for {
+//      pContent <- parserContent.parse(text)
+//      pSep     <- (opt(parserSep)).parse(pContent.notParsed)
+////        ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
+//    } yield if(pSep.parsed == None) pContent.copy(parsed = utilities.aplanandoAndo(pContent.parsed)) else pContent.copy(parsed = utilities.aplanandoAndo(pContent, this.parse(pSep.notParsed).get.parsed))
+
+//    for {
+//      uno <- ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
+//    } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
   }
 }
 

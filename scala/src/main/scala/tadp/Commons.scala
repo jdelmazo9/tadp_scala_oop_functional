@@ -39,3 +39,22 @@ case class Punto(x: Double, y: Double){
 case object pruebaAplanadora extends App{
   val a = utilities.aplanandoAndo[Punto](List(Punto(1,2)))
 }
+
+case object contador{
+  var cont = 0
+  val cont_id: collection.mutable.Map[String, Integer] = collection.mutable.Map[String, Integer]() // Dictionary[Any, Integer] = Dictionary["rectangulo", 0]
+  def inc = {
+    cont += 1
+  }
+
+  def get = cont
+
+  def inc_id(id: String): Unit = {
+    val aux: Integer = cont_id.getOrElse(id, 0)
+    cont_id.put(id, aux+1)
+  }
+
+  def get_id(id: String): Integer = {
+    cont_id.getOrElse(id, 0)
+  }
+}
