@@ -29,15 +29,17 @@ abstract class Parser[+T]{
     clausuraDeKleenePositiva[T](this)
   }
 
-  //TODO: NOTA PARA LOS CHINCHULINES: ACORDARSE DE ESTO Y DEL MAP
-//  def parser.satisfies():
-//  def map[U](mapFunction: T => U): parser.mapCombinator[T,U] = {
-//    parser.mapCombinator(this)(mapFunction)
-//  }
+  def satisfies(condition: T => Boolean): Parser[T] = {
+    parser.satisfiesCombinator(this)(condition)
+  }
 
-  //  def sepBy(sep: parser.Parser[U]): parser.sepByCombinator[T, Any] ={
-//    parser.sepByCombinator(this, sep)
-//  }
+  def map[U](mapFunction: T => U): Parser[U] = {
+    parser.mapCombinator(this)(mapFunction)
+  }
+
+  def sepBy[U](sep: parser.Parser[U]): Parser[List[T]] ={
+    parser.sepByCombinator(this, sep)
+  }
 
   def parse(text: String): Try[Resultado[T]]
 }
@@ -134,7 +136,7 @@ case class leftmostCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) ext
   }
 }
 
-case class satisfies[T](parser: Parser[T])(condition: T => Boolean) extends Parser[T] {
+case class satisfiesCombinator[T](parser: Parser[T])(condition: T => Boolean) extends Parser[T] {
   def parse(text:String): Try[Resultado[T]] = {//: Try[tadp.Resultado[List[T]]]
     val p2 = parser.parse(text)
     p2 match {
@@ -190,7 +192,7 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
       return Try(p1.get.copy(parsed = utilities.aplanandoAndo[T](p1.get.parsed)))
     }
     val larecur = this.parse(sep.get.notParsed)
-    return Try(p1.get.copy(parsed = utilities.aplanandoAndo(p1.get.parsed, larecur.get.parsed), notParsed = larecur.get.notParsed))
+    Try(p1.get.copy(parsed = utilities.aplanandoAndo(p1.get.parsed, larecur.get.parsed), notParsed = larecur.get.notParsed))
 
 //    for {
 //      pContent <- parserContent.parse(text)

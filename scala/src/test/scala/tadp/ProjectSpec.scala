@@ -231,31 +231,31 @@ class ParsersScpec extends AnyFunSpec {
     }
     describe("satifies combinator:") {
       it("Success: satisfies(string(\"hola\"))(isString).parse(\"hola mundo!\")") {
-        assert( satisfies(string("hola"))(isString).parse("hola mundo!") == Success(Resultado("hola"," mundo!")))
+        assert( satisfiesCombinator(string("hola"))(isString).parse("hola mundo!") == Success(Resultado("hola"," mundo!")))
       }
       it("Success: satisfies(anyChar())(_ == 'h').parse(\"hola mundo!\")") {
-        assert( satisfies(anyChar())(_ == 'h').parse("hola mundo!") == Success(Resultado('h',"ola mundo!")))
+        assert( satisfiesCombinator(anyChar())(_ == 'h').parse("hola mundo!") == Success(Resultado('h',"ola mundo!")))
       }
       it("Failure: satisfies(anyChar())(isString).parse(\"hola mundo!\")  Parsea pero no es un string lo parseado") {
-        assert(satisfies(anyChar())(isString).parse("hola mundo!").isFailure)
+        assert(satisfiesCombinator(anyChar())(isString).parse("hola mundo!").isFailure)
         assertThrows[ParserErrorException[Resultado[String]]] {
-          satisfies(anyChar())(isString).parse("hola mundo!").get
+          satisfiesCombinator(anyChar())(isString).parse("hola mundo!").get
         }
       }
       it("Failure: satisfies(string(\"hola\"))(isString).parse(\"hol mundo!\") No parsea") {
-        assert(satisfies(string("hola"))(isString).parse("hol mundo!").isFailure)
+        assert(satisfiesCombinator(string("hola"))(isString).parse("hol mundo!").isFailure)
         assertThrows[ParserErrorException[Resultado[String]]] {
-          satisfies(string("hola"))(isString).parse("hol mundo!").get
+          satisfiesCombinator(string("hola"))(isString).parse("hol mundo!").get
         }
       }
 
     }
     describe("opt combinator:") {
       it("Success: opt(satisfies(string(\"hola\"))(isString)).parse(\"hola mundo!\") cuando parser el parser ingresado") {
-        assert( opt(satisfies(string("hola"))(isString)).parse("hola mundo!") == Success(Resultado("hola"," mundo!")))
+        assert( opt(satisfiesCombinator(string("hola"))(isString)).parse("hola mundo!") == Success(Resultado("hola"," mundo!")))
       }
       it("Success: opt(satisfies(anyChar())(isString)).parse(\"hola mundo!\") cuando no parsea el parser ingresado") {
-        assert( opt(satisfies(anyChar())(isString)).parse("hola mundo!") == Success(Resultado(None,"hola mundo!")))
+        assert( opt(satisfiesCombinator(anyChar())(isString)).parse("hola mundo!") == Success(Resultado(None,"hola mundo!")))
       }
       it("Success: (opt(string(\"caca\")) <> string(\"hola\")).parse(\"holamundo\") cuando no parsea el parser ingresado") {
         assert((opt(string("caca")) <> string("hola")).parse("holamundo") == Success(Resultado(List("hola"),"mundo")))

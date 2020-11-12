@@ -29,7 +29,11 @@ package object Dibujante {
         // transformación aplicada a todos los hijos de un grupo => transformacion aplicada al grupo
       case Grupo(listaColores)
         if listaColores.forall(nodo => nodo.isInstanceOf[Colorete]) && listaColores.tail.forall(colorin => colorin.asInstanceOf[Colorete].color.equals(listaColores.head.asInstanceOf[Colorete].color))
-                                                                                  => listaColores.head.asInstanceOf[Colorete].copy(hijo = Grupo(listaColores.map(color => simplificar(color.asInstanceOf[Colorete].hijo))))
+                                                                                  => listaColores.head.asInstanceOf[Colorete].copy(colorin = Grupo(listaColores.map(color => simplificar(color.asInstanceOf[Colorete].hijo))))
+//      case Grupo(listaTransformaciones)
+//          if listaTransformaciones.tail.forall(transformin => transformin.equals(listaTransformaciones.head))
+//                                                                                    => listaTransformaciones.asInstanceOf[List[Transformacion]].head.copy(hijo = Grupo(listaTransformaciones.map(transfo => simplificar(transfo.asInstanceOf[Transformacion].hijo))))
+
 
         //Si tenemos una rotación, escala o traslación que contiene a otra transformación del mismo tipo, queremos reemplazarlas por la unión de las transformaciones.
         // Para cada una de estas transformaciones, la forma de unirse es la siguiente:
