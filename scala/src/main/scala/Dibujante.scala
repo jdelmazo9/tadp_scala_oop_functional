@@ -27,9 +27,6 @@ package object Dibujante {
         // transformación de color aplicada a otra transformacion de color => queda la de adentro
       case Colorete(Colorete(hijo2,color2), _)                                    => Colorete(simplificar(hijo2), color2)
         // transformación aplicada a todos los hijos de un grupo => transformacion aplicada al grupo
-//      case Grupo(listaColores: List[Colorete])
-//        if listaColores.tail.forall(colorin => colorin.color.equals(listaColores.head.color))
-//                                                                                  => listaColores.head.copy(hijo = Grupo(listaColores.map(color => simplificar(color.hijo))))
       case Grupo(listaColores)
         if listaColores.forall(nodo => nodo.isInstanceOf[Colorete]) && listaColores.tail.forall(colorin => colorin.asInstanceOf[Colorete].color.equals(listaColores.head.asInstanceOf[Colorete].color))
                                                                                   => listaColores.head.asInstanceOf[Colorete].copy(hijo = Grupo(listaColores.map(color => simplificar(color.asInstanceOf[Colorete].hijo))))

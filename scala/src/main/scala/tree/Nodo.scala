@@ -26,4 +26,4 @@ case class Escala(hijo: Nodo, escaladoX: Double, escaladoY: Double) extends Tran
 case class Traslacion(hijo: Nodo, desplazamientoX: Double, desplazamientoY: Double) extends Transformacion(hijo)
 
 // Grupo
-case class Grupo(hijos: List[Nodo]) extends Nodo()
+case class Grupo[+T<:Nodo](hijos: List[T]) extends Nodo()

@@ -5,11 +5,11 @@ import tadp.{ParserErrorException, Resultado, contador, utilities}
 import scala.util.{Failure, Success, Try}
 
 abstract class Parser[+T]{
-  def <|>[U<:W, W>:T](other: Parser[U]): Parser[W] ={ //: orCombinator[W, T, U]
+  def <|>[U<:W, W>:T](other: Parser[U]): Parser[W] ={
     orCombinator[W,T,U](this, other)
   }
 
-  def <>[U<:W, W>:T](other: Parser[U]): Parser[List[W]] ={ //: concatCombinator[W,T,U]
+  def <>[U<:W, W>:T](other: Parser[U]): Parser[List[W]] ={
     concatCombinator[W,T,U](this, other)
   }
 
@@ -17,11 +17,7 @@ abstract class Parser[+T]{
     rightmostCombinator(this, other)
   }
 
-//  def ~>[U](other: Parser[U]): rightmostCombinator[T, U] ={
-//    rightmostCombinator(this, other)
-//  }
-
-  def <~[U](other: Parser[U]): Parser[T] ={ //: leftmostCombinator[T, U]
+  def <~[U](other: Parser[U]): Parser[T] ={
     leftmostCombinator(this, other)
   }
 
@@ -33,11 +29,11 @@ abstract class Parser[+T]{
     clausuraDeKleenePositiva[T](this)
   }
 
+  //TODO: NOTA PARA LOS CHINCHULINES: ACORDARSE DE ESTO Y DEL MAP
 //  def parser.satisfies():
 //  def map[U](mapFunction: T => U): parser.mapCombinator[T,U] = {
 //    parser.mapCombinator(this)(mapFunction)
 //  }
-
 
   //  def sepBy(sep: parser.Parser[U]): parser.sepByCombinator[T, Any] ={
 //    parser.sepByCombinator(this, sep)
@@ -78,10 +74,7 @@ case class string(string: String) extends Parser[String] {
   def parse(text: String): Try[Resultado[String]] = {
     Try(text match {
       case _ if text.startsWith(string) => {
-        contador.inc_id(string)
-//        if(string == "rectangulo") {
-//          println("Recangulo parseado en: " + text)
-//        }
+ //       contador.inc_id(string)
         Resultado(string, text.substring(string.length))
       }
       case _ => throw new ParserErrorException(Resultado(null, text))
@@ -113,14 +106,11 @@ case class orCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) 
     if (p1.isSuccess) p1 else parser2.parse(text)
   }
 }
-// 1? <> 5*
-//case class parser.concatCombinator[+W,+T<:W,+U<:W](parser1: parser.Parser[T], parser2: parser.Parser[U]) extends parser.Parser[Product] {
-// Punto <> Punto => List(p1,p2)
-// List(Punto, Punto) <> Punto
+
 case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[U]) extends Parser[List[W]] {
   def parse(text:String): Try[Resultado[List[W]]] = {
     for {
-      result1 <- parser1.parse(text) // tadp.Resultado("hola", "mundo!")
+      result1 <- parser1.parse(text)
       result2 <- parser2.parse(result1.notParsed)
     } yield result2.copy(parsed = utilities.aplanandoAndo[W](result1.parsed, result2.parsed))
   }
@@ -129,7 +119,7 @@ case class concatCombinator[+W,+T<:W,+U<:W](parser1: Parser[T], parser2: Parser[
 case class rightmostCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) extends Parser[U] {
   def parse(text:String): Try[Resultado[U]] = {
     for {
-      result1 <- parser1.parse(text) // tadp.Resultado("hola", "mundo!")
+      result1 <- parser1.parse(text)
       result2 <- parser2.parse(result1.notParsed)
     } yield result2
   }
@@ -138,67 +128,40 @@ case class rightmostCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) ex
 case class leftmostCombinator[+T,+U](parser1: Parser[T], parser2: Parser[U]) extends Parser[T] {
   def parse(text:String): Try[Resultado[T]] = {
     for {
-      result1 <- parser1.parse(text) // tadp.Resultado("hola", "mundo!")
+      result1 <- parser1.parse(text)
       result2 <- parser2.parse(result1.notParsed)
     } yield result1.copy(notParsed = result2.notParsed)
   }
 }
 
-//123-456
-//val numeroDeTelefono "123-456" = parser.integer.sepBy(parser.char('-'))("123-456")
-
-
-// 123                  Cont
-// 123-456              Cont Sep Cont
-// 123-456-789          Cont Sep Cont Sep Cont
-// 123-456-789-100      Cont Sep Cont Sep Cont Sep Cont
-// 123-.........-121
-
-//CHECK DEL ANY PARA LA FUNCION CONDITION => TODO: Debería ser T y tira varianza y contravarianza
 case class satisfies[T](parser: Parser[T])(condition: T => Boolean) extends Parser[T] {
   def parse(text:String): Try[Resultado[T]] = {//: Try[tadp.Resultado[List[T]]]
-//    println("satisfies. quieren que parse: "+text)
-//    println("satisfies. quieren que parse con: "+condition)
     val p2 = parser.parse(text)
     p2 match {
         case Failure(e) => Failure(e)
         case success if condition(success.get.parsed) => success
         case _ => Try(throw new ParserErrorException(Resultado(null, text)))
     }
-//    for {
-//      result <- parser.parse(text)
-//      if condition(result.parsed)
-//    } yield result
   }
 }
 
-//TODO: OTRA IDEA ES HACER EL PARSER QUE NO PARSEA NADA (EL FALSO PARSER)
 case class opt[+T>: None.type](parser: Parser[T]) extends Parser[T] {
   def parse(text:String): Try[Resultado[T]] = {//: Try[tadp.Resultado[List[T]]]
     parser.parse(text) match {
-//      case Failure(e) => Success(tadp.Resultado(parsed = null, notParsed = text))
       case Failure(e) => Success(Resultado(None, text))
       case success => success
     }
   }
 }
 
-//*: la clausura de Kleene se aplica a un parser, convirtiéndolo en otro que se puede aplicar todas las veces que sea posible o 0 veces. El resultado debería ser una lista que contiene todos los valores que hayan sido parseados (podría no haber ninguno).
 case class clausuraDeKleene[+T](parser: Parser[T]) extends Parser[List[T]] {
   def parse(text:String): Try[Resultado[List[T]]] = {
-//    var aux = parser.parse(text)
-//    var res = aux.get
-//    while (aux.isSuccess){
-//
-//    }
     for {
       uno <- opt(parser <> this).parse(text)
     } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
-//    } yield uno.copy(parsed = uno.parsed.asInstanceOf[List[T]])
   }
 }
-//
-////  +: es como la clausura de Kleene pero requiere que el parser se aplique al menos UNA vez.
+
 case class clausuraDeKleenePositiva[+T](parser: Parser[T]) extends Parser[List[T]] {
   def parse(text:String): Try[Resultado[List[T]]] = {
     for {
@@ -208,16 +171,16 @@ case class clausuraDeKleenePositiva[+T](parser: Parser[T]) extends Parser[List[T
 }
 
 case class mapCombinator[T, U](parser: Parser[T])(mapFunction: T => U) extends Parser[U] {
-  def parse(text:String): Try[Resultado[U]] = {//: Try[tadp.Resultado[List[T]]]
+  def parse(text:String): Try[Resultado[U]] = {
     for{
       result <- parser.parse(text)
     } yield result.copy(parsed = mapFunction(result.parsed))
   }
 }
 
+//TODO: A VER SI DESPUES NOS ACORDAMOS
 case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[List[T]] {
-  def parse(text:String): Try[Resultado[List[T]]] = {//: Try[tadp.Resultado[List[T]]]
-//    println("sepby quieren que parsee: " + text)
+  def parse(text:String): Try[Resultado[List[T]]] = {
     val p1 = parserContent.parse(text)
     if(p1.isFailure){
       return Failure(new ParserErrorException[List[T]](Resultado(parsed = List(), notParsed = text)))
@@ -248,16 +211,4 @@ case class alphaNum() extends Parser[String]{
     } yield result1.copy(parsed = result1.parsed.mkString)
   }
 }
-
-
-
-//case object parserColor extends parser.Parser[Colorete] {
-//  def parse(text: String): Try[Resultado[Colorete]] = {
-//    val parserPartes = parser.string("color[") ~> (parser.integer() <> (parser.char(',') ~> parser.integer()) <> (parser.char(',') ~> parser.integer()) ) <~ parser.char(']')
-//    parserPartes.parse(text).map(resultado => resultado.parsed match {
-//      case List(a,b) => Resultado(Cuadrado(a,b), resultado.notParsed)
-//    })
-//  }
-//}
-
 
