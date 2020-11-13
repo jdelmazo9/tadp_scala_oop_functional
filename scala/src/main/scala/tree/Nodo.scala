@@ -16,30 +16,48 @@ case class Triangulo(firstPoint: Punto, secondPoint: Punto, thirstPoint: Punto) 
 
 // Transformacion
 abstract class Transformacion(val hijo: Nodo) extends Nodo() {
-//  def copy(hijo: Nodo): Transformacion = {
-//    this.copy(hijo)
-//  }
+    def transfCopy(hijo: Nodo): Transformacion
+
+  override def equals(obj: Any): Boolean = {
+    this.transfEquals(obj)
+  }
+  def transfEquals(obj: Any): Boolean
 }
 
 case class Colorete(colorin: Nodo, color: Color) extends Transformacion(colorin) {
-  def equals(obj: Colorete): Boolean = {
-    println(this.color + " " + obj.color)
-    color.equals(obj.color)
+  override def transfEquals(obj: Any): Boolean = {
+    obj.isInstanceOf[Colorete] && color.equals(obj.asInstanceOf[Colorete].color)
   }
-
-
+  override def transfCopy(hijo: Nodo): Colorete = {
+    this.copy(colorin = hijo)
+  }
 }
 
 case class Rotacion(rotin: Nodo, angulo: Double) extends Transformacion(rotin) {
-  def equals(obj: Rotacion): Boolean = angulo.equals(obj.angulo)
+  override def transfEquals(obj: Any): Boolean = {
+    obj.isInstanceOf[Colorete] && angulo.equals(obj.asInstanceOf[Rotacion].angulo)
+  }
+  override def transfCopy(hijo: Nodo): Rotacion = {
+    this.copy(rotin = hijo)
+  }
 }
 
 case class Escala(escalin: Nodo, escaladoX: Double, escaladoY: Double) extends Transformacion(escalin) {
-  def equals(obj: Escala): Boolean = escaladoX.equals(obj.escaladoX) && escaladoY.equals(obj.escaladoY)
+  override def transfEquals(obj: Any): Boolean = {
+    obj.isInstanceOf[Escala] && escaladoX.equals(obj.asInstanceOf[Escala].escaladoX) && escaladoY.equals(obj.asInstanceOf[Escala].escaladoY)
+  }
+  override def transfCopy(hijo: Nodo): Escala = {
+    this.copy(escalin = hijo)
+  }
 }
 
 case class Traslacion(trasladin: Nodo, desplazamientoX: Double, desplazamientoY: Double) extends Transformacion(trasladin) {
-  def equals(obj: Traslacion): Boolean = desplazamientoX.equals(obj.desplazamientoX) && desplazamientoY.equals(obj.desplazamientoY)
+  override def transfEquals(obj: Any): Boolean = {
+    obj.isInstanceOf[Traslacion] && desplazamientoX.equals(obj.asInstanceOf[Traslacion].desplazamientoX) && desplazamientoY.equals(obj.asInstanceOf[Traslacion].desplazamientoY)
+  }
+  override def transfCopy(hijo: Nodo): Traslacion = {
+    this.copy(trasladin = hijo)
+  }
 }
 
 // Grupo

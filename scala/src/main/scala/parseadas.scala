@@ -1,9 +1,11 @@
 import Dibujante.{dibujar, simplificar}
-import parser.parserRectangulo
+import parser.{DrawParsers, parserRectangulo}
 import scalafx.scene.paint.Color
 import tadp.Punto
 import tadp.internal.TADPDrawingAdapter
 import tree._
+
+import scala.io.Source
 
 case object parseadas extends App{
   //  println(satisfies(integer())(_ > 200).parse("250"))
@@ -40,17 +42,27 @@ case object parseadas extends App{
   val nodoHijo2: Cuadrado = Cuadrado(Punto(30.0, 30.0),Punto(40.0,40.0))
   val color: Colorete = Colorete(nodoHijo, Color.rgb(200,0,0))
   val color2: Colorete = Colorete(nodoHijo2, Color.rgb(200,0,0))
-  val escala: Escala = Escala(nodoHijo2, 10.0, 10.0)
+  val escala: Escala = Escala(nodoHijo, 10.0, 10.0)
+  val escala2: Escala = Escala(nodoHijo2, 10.0, 10.0)
+  val escala3: Escala = Escala(nodoHijo2, 10.0, 10.0)
+
 
   val grupo: Grupo[Nodo] = Grupo(List(color, color2,escala))
-  val grupo2: Grupo[Colorete] = Grupo(List(color, color2))
+  val grupo2: Grupo[Nodo] = Grupo(List(color, color2))
+  val grupoEscala: Grupo[Nodo] = Grupo(List(escala, escala2, escala3))
+  val grupoEscalaNoS: Grupo[Nodo] = Grupo(List(escala, escala2, escala3,color))
+
 
   println(simplificar(grupo))
-  print(simplificar(grupo2))
+  println(simplificar(grupo2))
+  println(simplificar(grupoEscala))
+  println(simplificar(grupoEscalaNoS))
+
+
 
   // Carpin
   //  println(Source.fromFile("C:\\Users\\Martin\\Documents\\TADP\\grupo12-2020-2c\\scala\\src\\main\\scala\\parser\\carpin.txt").mkString.trim)
-  //  DrawParsers.parseAndDraw(Source.fromFile("C:\\Users\\jdelm\\OneDrive\\Escritorio\\elCARPINCHOBOSTERO.txt").mkString)
+    DrawParsers.parseAndDraw(Source.fromFile("C:\\Users\\jdelm\\OneDrive\\Escritorio\\elCARPINCHOBOSTERO.txt").mkString)
 
   //  println(DrawParsers.parse("escala[1.45, 1.45](\n grupo(\n   color[0, 0, 0](\n     rectangulo[0 @ 0, 400 @ 400]\n   ),\n   color[200, 70, 0](\n     rectangulo[0 @ 0, 180 @ 150]\n   ),\n   color[250, 250, 250](\n     grupo(\n       rectangulo[186 @ 0, 400 @ 150],\n       rectangulo[186 @ 159, 400 @ 240],\n       rectangulo[0 @ 159, 180 @ 240],\n       rectangulo[45 @ 248, 180 @ 400],\n       rectangulo[310 @ 248, 400 @ 400],\n       rectangulo[186 @ 385, 305 @ 400]\n    )\n   ),\n   color[30, 50, 130](\n       rectangulo[186 @ 248, 305 @ 380]\n   ),\n   color[250, 230, 0](\n       rectangulo[0 @ 248, 40 @ 400]\n   )\n )\n)"))
 

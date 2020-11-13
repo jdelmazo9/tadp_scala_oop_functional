@@ -189,17 +189,15 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
     }
     val sep = parserSep.parse(p1.get.notParsed)
     if(sep.isFailure){
-      return Try(p1.get.copy(parsed = utilities.aplanandoAndo[T](p1.get.parsed)))
+      return Success(p1.get.copy(parsed = utilities.aplanandoAndo[T](p1.get.parsed)))
     }
     val larecur = this.parse(sep.get.notParsed)
     Try(p1.get.copy(parsed = utilities.aplanandoAndo(p1.get.parsed, larecur.get.parsed), notParsed = larecur.get.notParsed))
 
 //    for {
-//      pContent <- parserContent.parse(text)
-//      pSep     <- (opt(parserSep)).parse(pContent.notParsed)
-////        ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
-//    } yield if(pSep.parsed == None) pContent.copy(parsed = utilities.aplanandoAndo(pContent.parsed)) else pContent.copy(parsed = utilities.aplanandoAndo(pContent, this.parse(pSep.notParsed).get.parsed))
-
+////      pContent <- parserContent.parse(text)
+//      pSep     <- (parserContent <> opt(parserSep ~> this) ).parse(text)
+//    } yield pSep.copy(parsed = utilities.aplanandoAndo[T](pSep.parsed))
 //    for {
 //      uno <- ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
 //    } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))
