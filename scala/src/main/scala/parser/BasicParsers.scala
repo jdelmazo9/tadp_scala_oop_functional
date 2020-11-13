@@ -185,13 +185,18 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
   def parse(text:String): Try[Resultado[List[T]]] = {
     val p1 = parserContent.parse(text)
     if(p1.isFailure){
+      println("fallo p1")
       return Failure(new ParserErrorException[List[T]](Resultado(parsed = List(), notParsed = text)))
     }
     val sep = parserSep.parse(p1.get.notParsed)
     if(sep.isFailure){
+      println("fallo sep")
       return Success(p1.get.copy(parsed = utilities.aplanandoAndo[T](p1.get.parsed)))
     }
     val larecur = this.parse(sep.get.notParsed)
+    if(larecur.isFailure){
+      return Success(p1.get.copy(parsed = utilities.aplanandoAndo[T](p1.get.parsed)))
+    }
     Try(p1.get.copy(parsed = utilities.aplanandoAndo(p1.get.parsed, larecur.get.parsed), notParsed = larecur.get.notParsed))
 
 //    for {

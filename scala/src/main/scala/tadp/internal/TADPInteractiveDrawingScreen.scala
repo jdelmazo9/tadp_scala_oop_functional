@@ -102,7 +102,10 @@ class TADPInteractiveDrawingScreen(dibujador: (String, TADPDrawingAdapter) => An
       dibujador(descripcionDeImagen, adapter)
       callback()
     } catch {
-      case e => error(e.getMessage)
+      case e => {
+        error(e.getMessage)
+        println("error: "+e.getMessage)
+      }
     }
   }
 
@@ -111,7 +114,7 @@ class TADPInteractiveDrawingScreen(dibujador: (String, TADPDrawingAdapter) => An
       val image = new WritableImage(canvas.width.intValue(), canvas.height.intValue())
       canvas.snapshot(null, image)
 
-      val nombreDeImagen = s"dibujo-${LocalDateTime.now()}.png"
+      val nombreDeImagen = s"dibujo-${LocalDateTime.now()}.png".replace(":","")
       val nombreDeCarpeta = "out/"
 
       ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", new FileOutputStream(nombreDeCarpeta + nombreDeImagen))
