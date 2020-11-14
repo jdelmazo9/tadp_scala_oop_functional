@@ -41,7 +41,7 @@ package object Dibujante {
       case Escala(Escala(hijo2, escaladoX_2, escaladoY_2),escaladoX, escaladoY)   => Escala(simplificar(hijo2),escaladoX*escaladoX_2, escaladoY*escaladoY_2)
         //Traslación: se suman los valores de las traslaciones.
       case Traslacion(Traslacion(hijo2, desplazamientoX_2, desplazamientoY_2),desplazamientoX, desplazamientoY)
-                                                                                  => Traslacion(simplificar(hijo2),desplazamientoX*desplazamientoX_2, desplazamientoY*desplazamientoY_2)
+                                                                                  => Traslacion(simplificar(hijo2),desplazamientoX+desplazamientoX_2, desplazamientoY+desplazamientoY_2)
         //Hay veces donde una rotación, escala o traslación no cambia de ninguna manera a al elemento al que se aplican, en esos casos queremos simplemente reemplazarlas por el elemento.
         // Las transformaciones nulas que queremos borrar son:
         //rotación de 0 grados

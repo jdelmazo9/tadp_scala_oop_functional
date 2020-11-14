@@ -1,10 +1,13 @@
 //package tadp
 
+
+import Dibujante.simplificar
 import jdk.nashorn.internal.runtime.JSType.isString
 import org.scalatest.funspec.AnyFunSpec
 import parser._
-import tadp.{ParserErrorException, Resultado}
-
+import tadp.{ParserErrorException, Punto, Resultado}
+import tree._
+import scalafx.scene.paint.Color
 import scala.util.{Failure, Success}
 
 //import org.scalatest.{FreeSpec, Matchers}
@@ -258,7 +261,7 @@ class ParsersScpec extends AnyFunSpec {
         assert( opt(satisfiesCombinator(anyChar())(isString)).parse("hola mundo!") == Success(Resultado(None,"hola mundo!")))
       }
       it("Success: (opt(string(\"caca\")) <> string(\"hola\")).parse(\"holamundo\") cuando no parsea el parser ingresado") {
-        assert((opt(string("caca")) <> string("hola")).parse("holamundo") == Success(Resultado(List("hola"),"mundo")))
+        assert((opt(string("caca")) <> string("hola")).parse("holamundo") == Success(Resultado(List(None,"hola"),"mundo")))
       }
     }
     describe("map combinator:") {
@@ -320,4 +323,39 @@ class ParsersScpec extends AnyFunSpec {
       }
     }
   }
+  describe("Simplificar") {
+    it ("Un grupo tiene dos colores iguales para dos figuras distintas") {
+      assert(
+        simplificar(DrawParsers.parse("grupo(\n\tcolor[200, 200, 200](rectangulo[100 @ 100, 200 @ 200]),\n\tcolor[200, 200, 200](circulo[100 @ 300, 150])\n)").get)
+          ==
+        Colorete(Grupo(List(Cuadrado(Punto(100.0,100.0),Punto(200.0,200.0)), Circulo(Punto(100.0,300.0),150.0))), Color.rgb(200,200,200))
+      )
+    }
+
+    it ("Una rotación tiene otra rotación adentro: se suman los grados de las rotaciones") {
+      assert(
+        simplificar(DrawParsers.parse("rotacion[300](\n\trotacion[10](\n\t\trectangulo[100 @ 200, 300 @ 400]\n\t)\n)").get)
+          ==
+        Rotacion(Cuadrado(Punto(100.0,200.0),Punto(300.0,400.0)),310.0)
+      )
+    }
+
+    it ("Una escala tiene otra escala dentro: se multiplican los factores de escalado") {
+      assert(
+        simplificar(DrawParsers.parse("escala[2, 3](\n      escala[3, 5](\n\t     circulo[0 @ 5, 10]\n      )\n)").get)
+          ==
+        Escala(Circulo(Punto(0.0,5.0),10.0),6.0,15.0)
+      )
+    }
+
+    it ("Una traslacion tiene otra traslacion dentro: se suman los valores de traslaciones") {
+      assert(
+        simplificar(DrawParsers.parse("traslacion[100, 5](\n\ttraslacion[20, 10](\n\t\tcirculo[0 @ 5, 10]\n)\n)").get)
+          ==
+        Traslacion(Circulo(Punto(0.0,5.0),10.0),120.0,15.0)
+      )
+    }
+
+  }
+
 }
