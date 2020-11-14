@@ -1,5 +1,5 @@
 import Dibujante.{dibujar, simplificar}
-import parser.{DrawParsers, parserFor, parserRectangulo}
+import parser.{DrawParsers, parserRectangulo}
 import scalafx.scene.paint.Color
 import tadp.Punto
 import tadp.internal.TADPDrawingAdapter
@@ -74,5 +74,4 @@ case object parseadas extends App{
   //  println(parserRectangulo.parse("rectangulo[150 @ 100,200 @ 300]"))
   //  println(parserRectangulo.parse("rectangulo[150 @ 100   ,   200 @ 300]"))
 
-    println(parserFor.parse("for[traslacion[10,20],30](rectangulo[100@100,300@300])"))
 }

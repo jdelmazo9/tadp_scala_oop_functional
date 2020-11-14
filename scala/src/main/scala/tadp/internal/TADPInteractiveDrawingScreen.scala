@@ -102,10 +102,7 @@ class TADPInteractiveDrawingScreen(dibujador: (String, TADPDrawingAdapter) => An
       dibujador(descripcionDeImagen, adapter)
       callback()
     } catch {
-      case e => {
-        error(e.getMessage)
-        println("error: "+e.getMessage)
-      }
+      case e => error(e.getMessage)
     }
   }
 

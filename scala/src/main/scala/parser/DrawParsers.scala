@@ -8,7 +8,7 @@ import tadp.internal.TADPDrawingAdapter
 import tadp.{Punto, Resultado, contador}
 
 import scala.util.Try
-import tree.{Circulo, Colorete, Cuadrado, Escala, For, Grupo, Nodo, Rotacion, Traslacion, Triangulo}
+import tree.{Circulo, Colorete, Cuadrado, Escala, Grupo, Nodo, Rotacion, Traslacion, Triangulo}
 
 import scala.io.Source
 

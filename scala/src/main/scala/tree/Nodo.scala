@@ -35,7 +35,7 @@ case class Colorete(colorin: Nodo, color: Color) extends Transformacion(colorin)
 
 case class Rotacion(rotin: Nodo, angulo: Double) extends Transformacion(rotin) {
   override def transfEquals(obj: Any): Boolean = {
-    obj.isInstanceOf[Colorete] && angulo.equals(obj.asInstanceOf[Rotacion].angulo)
+    obj.isInstanceOf[Rotacion] && angulo.equals(obj.asInstanceOf[Rotacion].angulo)
   }
   override def transfCopy(hijo: Nodo): Rotacion = {
     this.copy(rotin = hijo)
