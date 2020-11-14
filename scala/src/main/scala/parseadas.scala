@@ -1,5 +1,5 @@
 import Dibujante.{dibujar, simplificar}
-import parser.{DrawParsers, parserRectangulo}
+import parser.{DrawParsers, parserFor, parserRectangulo}
 import scalafx.scene.paint.Color
 import tadp.Punto
 import tadp.internal.TADPDrawingAdapter
@@ -37,7 +37,7 @@ case object parseadas extends App{
   // Red
   //  DrawParsers.parseAndDraw("color[100, 100, 100](\n  grupo(\n    color[0, 0, 0](\n      grupo(\n        color[201, 176, 55](\n          triangulo[0 @ 0, 650 @ 0, 0 @ 750]\n        ),\n        color[215, 215, 215](\n          triangulo[650 @ 750, 650 @ 0, 0 @ 750]\n        ),\n        color[255, 255, 255](\n          grupo(\n            rectangulo[230 @ 150, 350 @ 180],\n            rectangulo[110 @ 150, 470 @ 390]\n          )\n        ),\n        color[255, 0, 0](\n          grupo(\n            rectangulo[170 @ 60, 410 @ 150],\n            rectangulo[350 @ 60, 380 @ 180],\n            rectangulo[200 @ 60, 230 @ 180],\n            rectangulo[260 @ 300, 320 @ 330],\n            rectangulo[170 @ 390, 410 @ 480]\n          )\n        ),\n        rectangulo[200 @ 180, 380 @ 210],\n        rectangulo[230 @ 240, 260 @ 300],\n        rectangulo[320 @ 240, 350 @ 300],\n        rectangulo[200 @ 30, 380 @ 60],\n        rectangulo[170 @ 60, 200 @ 90],\n        rectangulo[380 @ 60, 410 @ 90],\n        rectangulo[140 @ 90, 170 @ 150],\n        rectangulo[410 @ 90, 440 @ 150],\n        rectangulo[110 @ 150, 200 @ 180],\n        rectangulo[110 @ 180, 170 @ 210],\n        rectangulo[140 @ 210, 170 @ 240],\n        rectangulo[80 @ 210, 110 @ 270],\n        rectangulo[110 @ 270, 170 @ 330],\n        rectangulo[110 @ 300, 200 @ 330],\n        rectangulo[80 @ 330, 110 @ 390],\n        rectangulo[110 @ 390, 200 @ 420],\n        rectangulo[140 @ 420, 170 @ 480],\n        rectangulo[200 @ 420, 260 @ 450],\n        rectangulo[320 @ 420, 380 @ 450],\n        rectangulo[260 @ 390, 320 @ 420],\n        rectangulo[170 @ 330, 410 @ 390],\n        rectangulo[170 @ 480, 260 @ 510],\n        rectangulo[260 @ 450, 320 @ 480],\n        rectangulo[320 @ 480, 410 @ 510],\n        rectangulo[410 @ 420, 440 @ 480],\n        rectangulo[380 @ 390, 470 @ 420],\n        rectangulo[470 @ 330, 500 @ 390],\n        rectangulo[380 @ 300, 470 @ 330],\n        rectangulo[410 @ 270, 470 @ 330],\n        rectangulo[470 @ 210, 500 @ 270],\n        rectangulo[410 @ 210, 440 @ 240],\n        rectangulo[410 @ 180, 470 @ 210],\n        rectangulo[380 @ 150, 470 @ 180],\n        rectangulo[380 @ 150, 470 @ 180]\n      )\n    )\n  )\n)")
 
-    DrawParsers.interactiveScreen()
+//    DrawParsers.interactiveScreen()
 //  val nodoHijo: Cuadrado = Cuadrado(Punto(10.0, 10.0),Punto(20.0,20.0))
 //  val nodoHijo2: Cuadrado = Cuadrado(Punto(30.0, 30.0),Punto(40.0,40.0))
 //  val color: Colorete = Colorete(nodoHijo, Color.rgb(200,0,0))
@@ -73,4 +73,6 @@ case object parseadas extends App{
   //  println(parserPartes.parse("triangulo[0 @ 100,200 @ 300,150 @ 500]"))
   //  println(parserRectangulo.parse("rectangulo[150 @ 100,200 @ 300]"))
   //  println(parserRectangulo.parse("rectangulo[150 @ 100   ,   200 @ 300]"))
+
+    println(parserFor.parse("for[traslacion[10,20],30](rectangulo[100@100,300@300])"))
 }
