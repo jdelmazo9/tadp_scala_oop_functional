@@ -76,7 +76,7 @@ case class string(string: String) extends Parser[String] {
   def parse(text: String): Try[Resultado[String]] = {
     Try(text match {
       case _ if text.startsWith(string) => {
- //       contador.inc_id(string)
+        contador.inc_id(string)
         Resultado(string, text.substring(string.length))
       }
       case _ => throw new ParserErrorException(Resultado(null, text))
@@ -183,6 +183,7 @@ case class mapCombinator[T, U](parser: Parser[T])(mapFunction: T => U) extends P
 //TODO: A VER SI DESPUES NOS ACORDAMOS
 case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]) extends Parser[List[T]] {
   def parse(text:String): Try[Resultado[List[T]]] = {
+//     Anda con la segunda versión del aplanandoAndo, que al final no mejora tanto la performance como pensamos
     val p1 = parserContent.parse(text)
     if(p1.isFailure){
       return Failure(new ParserErrorException[List[T]](Resultado(parsed = List(), notParsed = text)))
@@ -195,12 +196,15 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
     if(larecur.isFailure){
       return Success(p1.get.copy(parsed = utilities.aplanandoAndo[T](p1.get.parsed)))
     }
+    //123-345
     Try(p1.get.copy(parsed = utilities.aplanandoAndo(p1.get.parsed, larecur.get.parsed), notParsed = larecur.get.notParsed))
 
+    // Anda con la primer versión del aplanandoAndo
 //    for {
-////      pContent <- parserContent.parse(text)
-//      pSep     <- (parserContent <> opt(parserSep ~> this) ).parse(text)
+//      pSep <- (parserContent <> opt(parserSep ~> this) ).parse(text)
 //    } yield pSep.copy(parsed = utilities.aplanandoAndo[T](pSep.parsed))
+
+    // Forma ideal hasta que queremos parsear imagenes y tarda mil años
 //    for {
 //      uno <- ((parserContent <~ parserSep <> this) <|> parserContent).parse(text)
 //    } yield uno.copy(parsed = utilities.aplanandoAndo[T](uno.parsed))

@@ -17,6 +17,7 @@ import scalafx.scene.paint.Color
 import scalafx.scene.{Group, Scene}
 
 class TADPInteractiveDrawingScreen(dibujador: (String, TADPDrawingAdapter) => Any) extends JFXApp {
+  var iterrrrrrrrrrrrr = 0
   val appWidth = 1200
   val appHeight = 800
   val paneSeparation = 20
@@ -54,9 +55,13 @@ class TADPInteractiveDrawingScreen(dibujador: (String, TADPDrawingAdapter) => An
     layoutX = 70
     onAction = { _ => guardar() }
   }
+  val bailando2020Button = new Button("El bailarin") {
+    layoutX = 145
+    onAction = { _ => bailame() }
+  }
   val ctrlEnter = new KeyCodeCombination(KeyCode.Enter, KeyCombination.ControlDown)
   val parseResultLabel = new Label("") {
-    layoutX = 150
+    layoutX = 230
     layoutY = 5
   }
 
@@ -69,7 +74,7 @@ class TADPInteractiveDrawingScreen(dibujador: (String, TADPDrawingAdapter) => An
       border.left = textField
       border.right = canvasPane
       border.bottom = new Group {
-        children = Seq(drawButton, saveButton, parseResultLabel)
+        children = Seq(drawButton, saveButton, bailando2020Button, parseResultLabel)
         margin = Insets(paneSeparation, 0, 0, 0)
       }
 
@@ -104,6 +109,29 @@ class TADPInteractiveDrawingScreen(dibujador: (String, TADPDrawingAdapter) => An
     } catch {
       case e => error(e.getMessage)
     }
+
+  }
+
+  def bailame(callback: () => Unit = () => ()): Unit = {
+    setupCanvas()
+    limpiarMensaje()
+    var descripcionDeImagen = ""
+    if (iterrrrrrrrrrrrr % 2 == 0) {
+      descripcionDeImagen = "grupo(\n\tescala[1.2, 1.2](\n\t\tgrupo(\n\t\t\tcolor[0, 0, 80](rectangulo[0 @ 0, 600 @ 700]),\n\t\t\tcolor[255, 255, 120](circulo[80 @ 80, 50]),\n\t\t\tcolor[0, 0, 80](circulo[95 @ 80, 40])\n\t\t)\n\t),\n\tcolor[50, 50, 50](triangulo[80 @ 270, 520 @ 270, 300 @ 690]),\n\tcolor[80, 80, 80](triangulo[80 @ 270, 170 @ 270, 300 @ 690]),\n\trotacion[-5](\ngrupo(\n\tcolor[100, 100, 100](triangulo[200 @ 200, 400 @ 200, 300 @ 150]),\n\tcolor[100, 100, 100](triangulo[200 @ 200, 400 @ 200, 300 @ 400]),\n\tcolor[150, 150, 150](triangulo[400 @ 200, 300 @ 400, 420 @ 320]),\n\tcolor[150, 150, 150](triangulo[300 @ 400, 200 @ 200, 180 @ 320]),\n\tcolor[100, 100, 100](triangulo[150 @ 280, 200 @ 200, 180 @ 320]),\n\tcolor[100, 100, 100](triangulo[150 @ 280, 200 @ 200, 150 @ 120]),\n\tcolor[100, 100, 100](triangulo[400 @ 200, 450 @ 300, 420 @ 320]),\n\tcolor[100, 100, 100](triangulo[400 @ 200, 450 @ 300, 450 @ 120]),\n        color[250, 100, 0](triangulo[300@ 410, 250 @ 450, 350 @ 500]),\n        color[250, 30, 0](triangulo[320@ 420, 280 @ 490, 240 @ 490]),\n\ttraslacion[65,-35](color[0, 200, 0](rotacion[15](rectangulo[180@ 220, 240@ 225]))),\n\ttraslacion[125,75](color[0, 200, 0](rotacion[-15](rectangulo[180@ 220, 240@ 225]))),\n\tgrupo(\n\t\tescala[0.4, 1](\n\t\t\tgrupo(\n\t\t\tcolor[220, 0,0](\n\t\t\t\tgrupo(\n\t\t\t\t\tcirculo[970 @ 270, 25],\n\t\t\t\t\tcirculo[530 @ 270, 25]\n\t\t\t\t)\n\t\t\t),\n\t\t\tcolor[0, 0,0](\n\t\t\t\tgrupo(\n\t\t\t\t\tcirculo[970 @ 270, 15],\n\t\t\t\t\tcirculo[530 @ 270, 15]\n\t\t\t\t)\n\t\t\t))\n\t\t)\n\t)))\n)"
+    }
+    else {
+      descripcionDeImagen = "grupo(\n\tescala[1.2, 1.2](\n\t\tgrupo(\n\t\t\tcolor[0, 0, 80](rectangulo[0 @ 0, 600 @ 700]),\n\t\t\tcolor[255, 255, 120](circulo[80 @ 80, 50]),\n\t\t\tcolor[0, 0, 80](circulo[95 @ 80, 40])\n\t\t)\n\t),\n\tcolor[50, 50, 50](triangulo[80 @ 270, 520 @ 270, 300 @ 690]),\n\tcolor[80, 80, 80](triangulo[80 @ 270, 170 @ 270, 300 @ 690]),\n\trotacion[5](\ngrupo(\n\tcolor[100, 100, 100](triangulo[200 @ 200, 400 @ 200, 300 @ 150]),\n\tcolor[100, 100, 100](triangulo[200 @ 200, 400 @ 200, 300 @ 400]),\n\tcolor[150, 150, 150](triangulo[400 @ 200, 300 @ 400, 420 @ 320]),\n\tcolor[150, 150, 150](triangulo[300 @ 400, 200 @ 200, 180 @ 320]),\n\tcolor[100, 100, 100](triangulo[150 @ 280, 200 @ 200, 180 @ 320]),\n\tcolor[100, 100, 100](triangulo[150 @ 280, 200 @ 200, 150 @ 120]),\n\tcolor[100, 100, 100](triangulo[400 @ 200, 450 @ 300, 420 @ 320]),\n\tcolor[100, 100, 100](triangulo[400 @ 200, 450 @ 300, 450 @ 120]),\n        color[250, 100, 0](triangulo[300@ 410, 250 @ 450, 350 @ 500]),\n        color[250, 30, 0](triangulo[320@ 420, 280 @ 490, 240 @ 490]),\n\ttraslacion[65,-35](color[0, 200, 0](rotacion[15](rectangulo[180@ 220, 240@ 225]))),\n\ttraslacion[125,75](color[0, 200, 0](rotacion[-15](rectangulo[180@ 220, 240@ 225]))),\n\tgrupo(\n\t\tescala[0.4, 1](\n\t\t\tgrupo(\n\t\t\tcolor[220, 0,0](\n\t\t\t\tgrupo(\n\t\t\t\t\tcirculo[970 @ 270, 25],\n\t\t\t\t\tcirculo[530 @ 270, 25]\n\t\t\t\t)\n\t\t\t),\n\t\t\tcolor[0, 0,0](\n\t\t\t\tgrupo(\n\t\t\t\t\tcirculo[970 @ 270, 15],\n\t\t\t\t\tcirculo[530 @ 270, 15]\n\t\t\t\t)\n\t\t\t))\n\t\t)\n\t)))\n)"
+    }
+    iterrrrrrrrrrrrr += 1
+
+
+    try {
+      dibujador(descripcionDeImagen, adapter)
+      callback()
+    } catch {
+      case e => error(e.getMessage)
+    }
+
   }
 
   def guardar(): Unit = {

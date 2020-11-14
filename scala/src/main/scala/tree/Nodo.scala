@@ -16,7 +16,7 @@ case class Triangulo(firstPoint: Punto, secondPoint: Punto, thirstPoint: Punto) 
 
 // Transformacion
 abstract class Transformacion(val hijo: Nodo) extends Nodo() {
-    def transfCopy(hijo: Nodo): Transformacion
+  def transfCopy(hijo: Nodo): Transformacion
 
   override def equals(obj: Any): Boolean = {
     this.transfEquals(obj)
