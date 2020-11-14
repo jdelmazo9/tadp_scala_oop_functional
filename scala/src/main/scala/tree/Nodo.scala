@@ -14,6 +14,7 @@ case class Cuadrado(topLeft: Punto, bottomRight: Punto) extends Figura()
 
 case class Triangulo(firstPoint: Punto, secondPoint: Punto, thirstPoint: Punto) extends Figura()
 
+
 // Transformacion
 abstract class Transformacion(val hijo: Nodo) extends Nodo() {
   def transfCopy(hijo: Nodo): Transformacion

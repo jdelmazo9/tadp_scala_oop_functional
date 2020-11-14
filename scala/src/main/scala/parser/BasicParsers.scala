@@ -201,7 +201,7 @@ case class sepByCombinator[+T,+U](parserContent: Parser[T], parserSep: Parser[U]
 
     // Anda con la primer versión del aplanandoAndo
 //    for {
-//      pSep <- (parserContent <> opt(parserSep ~> this) ).parse(text)
+//      pSep <- (parserContent <> (parserSep ~> parserContent).* ).parse(text)
 //    } yield pSep.copy(parsed = utilities.aplanandoAndo[T](pSep.parsed))
 
     // Forma ideal hasta que queremos parsear imagenes y tarda mil años
