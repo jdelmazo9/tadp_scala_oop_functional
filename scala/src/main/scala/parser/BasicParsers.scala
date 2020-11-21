@@ -1,5 +1,6 @@
 package parser
 
+//import shapeless.T
 import tadp.{ParserErrorException, Resultado, contador, utilities}
 
 import scala.util.{Failure, Success, Try}
@@ -33,6 +34,10 @@ abstract class Parser[+T]{
     parser.satisfiesCombinator(this)(condition)
   }
 
+  def repetir(veces: Int): Parser[List[T]] = {
+    repetirComb(this)(veces)
+  }
+
   def map[U](mapFunction: T => U): Parser[U] = {
     parser.mapCombinator(this)(mapFunction)
   }
@@ -42,6 +47,7 @@ abstract class Parser[+T]{
   }
 
   def parse(text: String): Try[Resultado[T]]
+
 }
 
 case class anyChar() extends Parser[Char] {
@@ -218,4 +224,43 @@ case class alphaNum() extends Parser[String]{
     } yield result1.copy(parsed = result1.parsed.mkString)
   }
 }
+
+//NO FUNCIONO ESTE INTENTO
+//case class parserDeNada[+T>: None.type ]() extends Parser[T]{
+//  def parse(text: String): Try[Resultado[T]] = {
+//    Success(
+//      Resultado(None, text)
+//    )
+//  }
+//}
+
+case class repetirComb[T](parser: Parser[T])(veces: Int) extends Parser[List[T]] {
+
+  //LOS TESTS ESTAN AL FINAL EN ProjectSpec
+  //La función no contempla si te pasan veces 0 o negativo.
+  def parse(text: String): Try[Resultado[List[T]]] = {
+
+    var parserComb = parser <> parser
+
+    for (i <- 1 to veces-2){
+      parserComb = (parserComb <> parser).asInstanceOf[Parser[List[T]]]
+      //Utilizo asInstanceOf ya que estoy seguro del tipo pero no puedo validar que sea así por la forma del concat
+    }
+
+
+    if(veces == 1) {
+      for {
+        result <- parser.parse(text)
+      } yield result.copy(parsed = utilities.aplanandoAndo[T](result.parsed))
+    } else {
+      for {
+        result <- parserComb.parse(text)
+      } yield result.copy(parsed = utilities.aplanandoAndo[T](result.parsed))
+    }
+
+
+  }
+}
+
+
 

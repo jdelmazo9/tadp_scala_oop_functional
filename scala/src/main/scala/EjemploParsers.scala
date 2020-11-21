@@ -12,7 +12,9 @@ import scala.io.Source
 
 case object EjemploParsers extends App{
 
-//  println(aplanandoAndo(List(1,2,3)))
+//  print(string("hola").repetir(2).parse("holaholahola"))
+
+  //  println(aplanandoAndo(List(1,2,3)))
 //  println(aplanandoAndo(List(1,2,3,None)))
 //  println(aplanandoAndo(List(1,2,None,3,None)))
 //  println(aplanandoAndo(List(1,2,None,3,List(1,2,None,3,None))))

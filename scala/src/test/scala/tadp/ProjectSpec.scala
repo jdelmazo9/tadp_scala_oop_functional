@@ -358,4 +358,19 @@ class ParsersScpec extends AnyFunSpec {
 
   }
 
+  describe("repetir combinator:") {
+    it("Success: parsea 2 holas") {
+      assert( string("hola").repetir(2).parse("holaholahola") == Success(Resultado(List("hola","hola"),"hola")))
+    }
+    it("Success: parsea 1 hola") {
+      assert( string("hola").repetir(1).parse("holaholahola") == Success(Resultado(List("hola"),"holahola")))
+    }
+    it("Success: parsea 3 holas") {
+      assert( string("hola").repetir(3).parse("holaholahola") == Success(Resultado(List("hola","hola","hola"),"")))
+    }
+    it("Failure: intenta parsear 3 holas") {
+      assert( string("hola").repetir(3).parse("holachauhola").isFailure)
+    }
+  }
+
 }
